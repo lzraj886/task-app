@@ -103,7 +103,7 @@
         .filter{padding:6px 16px;margin:0 4px;border-radius:30px;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;background:#f0f4ff;color:#007AFF;font-weight:500;}
         .filter.active{background:linear-gradient(to right,#007AFF,#34AADC);color:white;box-shadow:0 4px 10px rgba(0,122,255,0.2);}
         .task-list{padding:15px;max-height:60vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
-        .task-item{background:white;border-radius:18px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.05);transition:all 0.3s ease;user-select:none;border:1px solid rgba(0,0,0,0.03);display:block;white-space:normal;width:100%;vertical-align:top;box-sizing:border-box;}
+        .task-item{background:white;border-radius:18px;padding:16px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.05);transition:all 0.3s ease;user-select:none;border:1px solid rgba(0,0,0,0.03);display:block;white-space:normal;width:100%;vertical-align:top;box-sizing:border-box;}
         .task-header{display:flex;align-items:center;margin-bottom:10px;cursor:pointer;}
         .task-check{width:24px;height:24px;border-radius:8px;border:2px solid #007AFF;margin-right:12px;display:flex;justify-content:center;align-items:center;flex-shrink:0;transition:all 0.3s ease;cursor:pointer;}
         .task-check i{color:white;font-size:14px;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
@@ -150,12 +150,12 @@
         .add-subtask{margin-top:10px;padding:10px;color:#007AFF;font-weight:500;display:flex;align-items:center;cursor:pointer;border-radius:10px;background:#f0f4ff;transition:all 0.3s ease;font-size:0.9rem;}
         .add-subtask:hover{background:#e5ebff;}
         .add-subtask i{margin-right:8px;}
-        .subtask-form{display:flex;margin-top:12px;align-items:center;}
-        .subtask-input{flex-grow:1;padding:12px 16px;border:1px solid #ddd;border-radius:12px;font-size:0.85rem;outline:none;transition:all 0.3s ease;background:#f8f9ff;}
+        .subtask-form{display:flex;margin-top:12px;align-items:center;gap:6px;flex-wrap:nowrap;}
+        .subtask-input{flex:1 1 auto;min-width:0;padding:10px 12px;border:1px solid #ddd;border-radius:12px;font-size:0.85rem;outline:none;transition:all 0.3s ease;background:#f8f9ff;}
         .subtask-input:focus{border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,0.1);}
-        .subtask-duration{width:80px;padding:12px 8px;margin-left:8px;border:1px solid #ddd;border-radius:12px;font-size:0.85rem;outline:none;background:#f8f9ff;}
+        .subtask-duration{width:60px;flex-shrink:0;padding:10px 6px;border:1px solid #ddd;border-radius:12px;font-size:0.85rem;outline:none;background:#f8f9ff;text-align:center;}
         .subtask-duration:focus{border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,0.1);}
-        .add-subtask-btn{width:36px;height:36px;border-radius:10px;background:#007AFF;color:white;display:flex;justify-content:center;align-items:center;margin-left:10px;cursor:pointer;transition:all 0.3s ease;}
+        .add-subtask-btn{width:36px;height:36px;flex-shrink:0;border-radius:10px;background:#007AFF;color:white;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s ease;}
         .add-subtask-btn:hover{background:#0062cc;transform:scale(1.1);}
         .edit-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.95);display:flex;align-items:center;padding:0 20px;opacity:0;pointer-events:none;transition:all 0.3s ease;z-index:10;}
         .edit-overlay.active{opacity:1;pointer-events:all;}
