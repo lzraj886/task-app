@@ -1,5 +1,5 @@
 // Service Worker - 任务管家 PWA
-const CACHE_NAME = 'task-app-v2';
+const CACHE_NAME = 'task-app-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

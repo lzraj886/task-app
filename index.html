@@ -398,25 +398,79 @@
         });
     }
 
+    // ===== 健壮存储层：localStorage + IndexedDB 双写 =====
+    const idb = {
+        db: null,
+        init() {
+            return new Promise((resolve) => {
+                if(!window.indexedDB) { resolve(false); return; }
+                try {
+                    const req = indexedDB.open('task_app_db', 1);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if(!db.objectStoreNames.contains('kv')) {
+                            db.createObjectStore('kv', {keyPath:'k'});
+                        }
+                    };
+                    req.onsuccess = (e) => { this.db = e.target.result; resolve(true); };
+                    req.onerror = () => { resolve(false); };
+                } catch(e) { resolve(false); }
+            });
+        },
+        set(key, value) {
+            return new Promise((resolve) => {
+                if(!this.db) { resolve(false); return; }
+                try {
+                    const tx = this.db.transaction('kv', 'readwrite');
+                    tx.objectStore('kv').put({k:key, v:value});
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                } catch(e) { resolve(false); }
+            });
+        },
+        get(key) {
+            return new Promise((resolve) => {
+                if(!this.db) { resolve(null); return; }
+                try {
+                    const tx = this.db.transaction('kv', 'readonly');
+                    const req = tx.objectStore('kv').get(key);
+                    req.onsuccess = () => resolve(req.result ? req.result.v : null);
+                    req.onerror = () => resolve(null);
+                } catch(e) { resolve(null); }
+            });
+        }
+    };
+
+    // 统一存储读写（双写 + 容错）
+    async function storageSet(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.warn('localStorage 写入失败:', e); }
+        await idb.set(key, value);
+    }
+    function storageGetSync(key) {
+        try {
+            const v = localStorage.getItem(key);
+            return v ? JSON.parse(v) : null;
+        } catch(e) { return null; }
+    }
+
     // 数据持久化
-    function saveTasks() { localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks)); }
-    function saveEvents() { localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events)); }
-    function saveHabits() { localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(habits)); }
+    function saveTasks() { storageSet(TASKS_STORAGE_KEY, tasks); }
+    function saveEvents() { storageSet(EVENTS_STORAGE_KEY, events); }
+    function saveHabits() { storageSet(HABITS_STORAGE_KEY, habits); }
     function savePomodoroSettings() {
-        localStorage.setItem(POMODORO_SETTINGS_KEY, JSON.stringify({
+        storageSet(POMODORO_SETTINGS_KEY, {
             workDuration: pomodoroWorkDuration,
             breakDuration: pomodoroBreakDuration,
             count: pomodoroCount
-        }));
+        });
     }
     function loadPomodoroSettings() {
-        const saved = localStorage.getItem(POMODORO_SETTINGS_KEY);
-        if(saved) {
+        const saved = storageGetSync(POMODORO_SETTINGS_KEY);
+        if(saved && typeof saved === 'object') {
             try {
-                const s = JSON.parse(saved);
-                if(typeof s.workDuration === 'number' && s.workDuration > 0) pomodoroWorkDuration = s.workDuration;
-                if(typeof s.breakDuration === 'number' && s.breakDuration > 0) pomodoroBreakDuration = s.breakDuration;
-                if(typeof s.count === 'number' && s.count >= 0) pomodoroCount = s.count;
+                if(typeof saved.workDuration === 'number' && saved.workDuration > 0) pomodoroWorkDuration = saved.workDuration;
+                if(typeof saved.breakDuration === 'number' && saved.breakDuration > 0) pomodoroBreakDuration = saved.breakDuration;
+                if(typeof saved.count === 'number' && saved.count >= 0) pomodoroCount = saved.count;
                 document.getElementById('work-duration').value = pomodoroWorkDuration;
                 document.getElementById('break-duration').value = pomodoroBreakDuration;
                 const countEl = document.getElementById('pomodoro-count');
@@ -427,9 +481,9 @@
         }
     }
     function loadTasks() {
-        const stored = localStorage.getItem(TASKS_STORAGE_KEY);
+        const stored = storageGetSync(TASKS_STORAGE_KEY);
         try {
-            tasks = stored ? JSON.parse(stored) : [
+            tasks = stored ? stored : [
                 { id:1, title:"完成项目报告", completed:false, category:"work", startTime:"09:00", endTime:"11:00", expanded:false,
                   subtasks:[ { id:101, title:"收集数据", completed:true, duration:30, startTime:Date.now()-1200000 },
                              { id:102, title:"撰写初稿", completed:false, duration:45, startTime:Date.now()-600000 },
@@ -444,9 +498,9 @@
         }
     }
     function loadEvents() {
-        const stored = localStorage.getItem(EVENTS_STORAGE_KEY);
+        const stored = storageGetSync(EVENTS_STORAGE_KEY);
         try {
-            events = stored ? JSON.parse(stored) : (function(){
+            events = stored ? stored : (function(){
                 const now = new Date();
                 const yyyy = now.getFullYear();
                 const mm = String(now.getMonth()+1).padStart(2,'0');
@@ -463,9 +517,9 @@
         }
     }
     function loadHabits() {
-        const stored = localStorage.getItem(HABITS_STORAGE_KEY);
+        const stored = storageGetSync(HABITS_STORAGE_KEY);
         try {
-            habits = stored ? JSON.parse(stored) : [
+            habits = stored ? stored : [
                 { id:1, name:"晨跑锻炼", type:"exercise", days:12, streak:5, history:[], lastCheckin:getCurrentDate() },
                 { id:2, name:"阅读学习", type:"study", days:18, streak:7, history:[], lastCheckin:getCurrentDate() },
                 { id:3, name:"喝水2L", type:"health", days:25, streak:10, history:[], lastCheckin:getCurrentDate() }
@@ -994,7 +1048,7 @@
     }
     function resetAllData() {
         if(confirm('确认重置所有数据？不可恢复！')) {
-            localStorage.clear();
+            try { localStorage.clear(); } catch(e) {}
             location.reload();
         }
     }
@@ -1113,14 +1167,56 @@
         document.querySelectorAll('.close-modal, .cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
     }
 
-    function init() {
-        loadTasks();
-        loadEvents();
-        loadHabits();
-        loadPomodoroSettings();
+    async function init() {
+        // 先初始化 IndexedDB
+        await idb.init();
+        
+        // 优先从 IndexedDB 加载（最可靠），localStorage 作为快速缓存
+        const idbTasks = await idb.get(TASKS_STORAGE_KEY);
+        const idbEvents = await idb.get(EVENTS_STORAGE_KEY);
+        const idbHabits = await idb.get(HABITS_STORAGE_KEY);
+        const idbPomodoro = await idb.get(POMODORO_SETTINGS_KEY);
+        
+        // 如果 IndexedDB 有数据，优先用；否则用 localStorage；都没有用默认
+        if(idbTasks && Array.isArray(idbTasks) && idbTasks.length > 0) {
+            tasks = idbTasks;
+        } else {
+            loadTasks();
+        }
+        if(idbEvents && Array.isArray(idbEvents) && idbEvents.length > 0) {
+            events = idbEvents;
+        } else {
+            loadEvents();
+        }
+        if(idbHabits && Array.isArray(idbHabits) && idbHabits.length > 0) {
+            habits = idbHabits;
+        } else {
+            loadHabits();
+        }
+        
+        // 加载番茄钟设置
+        if(idbPomodoro) {
+            try {
+                if(typeof idbPomodoro.workDuration === 'number' && idbPomodoro.workDuration > 0) pomodoroWorkDuration = idbPomodoro.workDuration;
+                if(typeof idbPomodoro.breakDuration === 'number' && idbPomodoro.breakDuration > 0) pomodoroBreakDuration = idbPomodoro.breakDuration;
+                if(typeof idbPomodoro.count === 'number' && idbPomodoro.count >= 0) pomodoroCount = idbPomodoro.count;
+                document.getElementById('work-duration').value = pomodoroWorkDuration;
+                document.getElementById('break-duration').value = pomodoroBreakDuration;
+                const countEl = document.getElementById('pomodoro-count');
+                if(countEl) countEl.textContent = `完成轮数：${pomodoroCount}`;
+                pomodoroTimeLeft = pomodoroWorkDuration * 60;
+            } catch(e) {}
+        } else {
+            loadPomodoroSettings();
+        }
+        
+        // 同步回 localStorage（确保两边一致）
+        saveTasks(); saveEvents(); saveHabits(); savePomodoroSettings();
+        
         renderTasks();
         renderEvents();
         renderHabits();
+        updatePomodoroDisplay();
         initEventListeners();
         startTimerUpdates();
     }
