@@ -1,15 +1,15 @@
 // Service Worker - 任务管家 PWA
-const CACHE_NAME = 'task-app-v5';
+const CACHE_NAME = 'task-app-v6';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/css/all.min.css',
-  '/webfonts/fa-solid-900.woff2',
-  '/webfonts/fa-regular-400.woff2',
-  '/webfonts/fa-brands-400.woff2'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './css/all.min.css',
+  './webfonts/fa-solid-900.woff2',
+  './webfonts/fa-regular-400.woff2',
+  './webfonts/fa-brands-400.woff2'
 ];
 
 // 安装事件 - 预缓存所有核心资源
@@ -34,7 +34,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 请求拦截 - 缓存策略：缓存优先（离线可用），网络更新
+// 请求拦截 - 缓存优先（离线可用），后台网络更新
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
       }
       // 没缓存就走网络
       return fetch(event.request).then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
+        if (response && response.status === 200) {
           const cloned = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, cloned);
