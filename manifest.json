@@ -1,0 +1,26 @@
+{
+  "name": "任务管家 - 高效管理任务与时间",
+  "short_name": "任务管家",
+  "description": "增强型任务管理系统，支持任务管理、子任务倒计时、番茄工作法、每日打卡、重要事件倒计时",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f7ff",
+  "theme_color": "#007AFF",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "zh-CN",
+  "categories": ["productivity", "utilities"]
+}

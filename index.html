@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>任务管家 - 高效管理任务与时间</title>
+    <meta name="description" content="增强型任务管理系统，支持任务管理、子任务倒计时、番茄工作法、每日打卡、重要事件倒计时">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="任务管家">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 完整原始样式（未做任何视觉改动） */
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,sans-serif;}
+        body{background:linear-gradient(135deg,#f5f7ff,#eaefff);color:#333;min-height:100vh;padding:0;display:flex;justify-content:center;align-items:center;}
+        .container{width:auto;max-width:100%;min-width:320px;height:auto;background:#fff;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.1);position:relative;margin:auto;display:flex;flex-direction:column;min-height:100%;overflow-y:auto;overflow-x:hidden;}
+        .main-content{flex:2;padding:20px;overflow-x:hidden;-webkit-overflow-scrolling:touch;white-space:normal;}
+        .bottom-module{flex:1;max-height:30vh;padding:15px;}
+        header{background:linear-gradient(to right,#007AFF,#34AADC);color:white;padding:25px 20px 20px;text-align:center;position:relative;border-bottom-left-radius:20px;border-bottom-right-radius:20px;box-shadow:0 4px 12px rgba(0,122,255,0.2);}
+        h1{font-size:1.8rem;margin-bottom:5px;font-weight:700;letter-spacing:-0.5px;}
+        .subtitle{font-size:0.9rem;opacity:0.9;margin-bottom:15px;font-weight:400;}
+        .settings-container{position:absolute;top:20px;right:20px;z-index:100;}
+        .settings-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);color:white;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s ease;}
+        .settings-btn:hover{transform:rotate(30deg) scale(1.1);background:rgba(255,255,255,0.3);}
+        .settings-menu{position:absolute;top:50px;right:0;background:rgba(255,255,255,0.95);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);width:200px;overflow:hidden;display:none;z-index:200;backdrop-filter:blur(20px);border:1px solid rgba(0,0,0,0.05);}
+        .settings-menu.show{display:block;animation:fadeIn 0.3s ease;}
+        .settings-item{padding:14px 18px;display:flex;align-items:center;cursor:pointer;transition:all 0.2s ease;border-bottom:1px solid rgba(0,0,0,0.05);font-weight:500;color:#333;}
+        .settings-item:last-child{border-bottom:none;}
+        .settings-item:hover{background:rgba(0,122,255,0.05);}
+        .settings-item i{margin-right:12px;width:20px;text-align:center;color:#007AFF;}
+        .settings-item.reset:hover{background:rgba(255,59,48,0.05);}
+        .settings-item.reset i{color:#FF3B30;}
+        .events-container{background:linear-gradient(to right,#5856D6,#AF52DE);border-radius:12px;padding:15px;margin:10px 10px;position:relative;box-shadow:0 6px 20px rgba(88,86,214,0.2);}
+        .events-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;cursor:pointer;}
+        .events-title{font-size:1.1rem;color:white;font-weight:600;display:flex;align-items:center;}
+        .events-title i{margin-right:8px;font-size:1.2rem;}
+        .toggle-icon{color:white;font-size:1rem;transition:transform 0.3s ease;}
+        .events-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;transition:all 0.3s ease;}
+        .event-item{background:rgba(255,255,255,0.15);border-radius:16px;padding:12px;position:relative;overflow:hidden;backdrop-filter:blur(5px);transition:all 0.3s ease;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.08);}
+        .event-item:hover{background:rgba(255,255,255,0.25);transform:translateY(-3px);}
+        .event-icon{width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;justify-content:center;align-items:center;font-size:1.2rem;color:white;margin-bottom:10px;}
+        .event-name{font-size:0.9rem;color:white;font-weight:600;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .event-notes{font-size:0.8rem;color:rgba(255,255,255,0.85);margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;min-height:2.8em;}
+        .event-countdown{font-size:0.85rem;color:rgba(255,255,255,0.9);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;}
+        .countdown-value{font-size:1.1rem;color:white;font-weight:700;}
+        .event-progress{height:5px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;margin-top:5px;}
+        .event-progress-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+        .event-actions{position:absolute;top:8px;right:8px;display:flex;gap:5px;opacity:0;transition:opacity 0.3s ease;}
+        .event-item:hover .event-actions{opacity:1;}
+        .event-action{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.3);display:flex;justify-content:center;align-items:center;color:white;font-size:0.7rem;cursor:pointer;transition:all 0.2s ease;}
+        .event-action:hover{background:rgba(255,255,255,0.5);transform:scale(1.1);}
+        .add-event{display:flex;justify-content:center;align-items:center;width:100%;height:36px;background:rgba(255,255,255,0.2);border-radius:12px;color:white;font-size:0.9rem;cursor:pointer;transition:all 0.3s ease;margin-top:10px;font-weight:500;}
+        .add-event:hover{background:rgba(255,255,255,0.3);}
+        .add-event i{margin-right:8px;font-size:0.9rem;}
+        .collapsed .events-body{max-height:0;opacity:0;overflow:hidden;margin:0;padding:0;}
+        .collapsed .toggle-icon{transform:rotate(180deg);}
+        .event-item.personal .event-icon{background:#FF2D55;}
+        .event-item.work .event-icon{background:#FF9500;}
+        .event-item.holiday .event-icon{background:#4CD964;}
+        .event-item.other .event-icon{background:#5AC8FA;}
+        .event-item.personal .event-progress-fill{background:#FF2D55;}
+        .event-item.work .event-progress-fill{background:#FF9500;}
+        .event-item.holiday .event-progress-fill{background:#4CD964;}
+        .event-item.other .event-progress-fill{background:#5AC8FA;}
+        .pomodoro-container{display:flex;flex-direction:column;background:linear-gradient(135deg,#5a67d8,#9f7aea);border-radius:12px;padding:15px;margin:10px 10px;}
+        .pomodoro-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+        .pomodoro-title{font-size:1.1rem;color:white;font-weight:600;display:flex;align-items:center;}
+        .pomodoro-title i{margin-right:8px;font-size:1.2rem;}
+        .pomodoro-display-container{display:flex;flex-direction:column;align-items:center;margin-bottom:15px;}
+        .pomodoro-display{font-size:2.5rem;font-weight:bold;background:rgba(0,0,0,0.2);padding:15px 40px;border-radius:30px;letter-spacing:2px;margin-bottom:10px;min-width:180px;text-align:center;color:white;}
+        .pomodoro-progress{width:100%;height:10px;background:rgba(255,255,255,0.3);border-radius:5px;overflow:hidden;margin-top:10px;}
+        .pomodoro-progress-fill{height:100%;background:white;border-radius:5px;width:0%;transition:width 1s linear;}
+        .pomodoro-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+        .pomodoro-btn{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;justify-content:center;align-items:center;color:white;cursor:pointer;transition:all 0.3s ease;font-size:1.2rem;border:2px solid rgba(255,255,255,0.5);}
+        .pomodoro-btn:hover{background:rgba(255,255,255,0.4);transform:scale(1.1);}
+        .quick-time-btn{min-width:80px;height:36px;border-radius:18px;background:rgba(255,255,255,0.25);display:flex;justify-content:center;align-items:center;color:white;cursor:pointer;transition:all 0.3s ease;font-size:0.9rem;padding:0 15px;border:2px solid rgba(255,255,255,0.3);}
+        .quick-time-btn:hover{background:rgba(255,255,255,0.4);transform:translateY(-2px);}
+        .pomodoro-settings{display:flex;gap:10px;margin-top:15px;justify-content:center;}
+        .time-setting{display:flex;align-items:center;gap:5px;font-size:0.9rem;color:white;}
+        .time-setting input{width:50px;padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.2);color:white;text-align:center;font-weight:500;}
+        .stats{display:flex;justify-content:space-around;padding:15px 0;background:rgba(255,255,255,0.15);border-radius:16px;margin-top:15px;backdrop-filter:blur(10px);}
+        .stat-item{text-align:center;padding:0 10px;}
+        .stat-value{font-size:1.5rem;font-weight:bold;line-height:1.2;color:white;}
+        .stat-label{font-size:0.75rem;opacity:0.9;color:rgba(255,255,255,0.9);}
+        .total-progress{width:calc(100% - 16px);margin:8px auto 0;height:16px;background:rgba(255,255,255,0.3);border-radius:8px;overflow:hidden;position:relative;}
+        .progress-fill{height:100%;background:linear-gradient(to right,#FF2D55,#FF9500);border-radius:4px;width:65%;transition:width 0.5s ease;position:relative;}
+        .progress-percent{position:absolute;top:50%;left:8px;transform:translateY(-50%);font-size:0.75rem;font-weight:700;color:white;white-space:nowrap;text-shadow:0 0 4px rgba(0,0,0,0.5);}
+        .task-input-area{padding:15px 20px 20px;position:relative;}
+        .add-task-card{background:white;border-radius:18px;padding:18px;box-shadow:0 4px 15px rgba(0,0,0,0.05);cursor:pointer;transition:all 0.3s ease;border:1px solid rgba(0,0,0,0.05);}
+        .add-task-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+        .add-task-card .card-header{display:flex;align-items:center;margin-bottom:12px;}
+        .add-icon{width:36px;height:36px;background:#007AFF;border-radius:10px;display:flex;justify-content:center;align-items:center;margin-right:12px;color:white;font-size:1.1rem;}
+        .add-task-card h3{color:#333;font-weight:600;font-size:1.1rem;}
+        .category-container{display:flex;justify-content:center;margin-top:15px;gap:15px;flex-wrap:wrap;}
+        .category-option{width:60px;height:60px;border-radius:16px;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s ease;position:relative;flex-direction:column;background:#f8f9ff;box-shadow:0 3px 10px rgba(0,0,0,0.05);}
+        .category-option:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,0.08);}
+        .category-icon{width:46px;height:46px;border-radius:12px;display:flex;justify-content:center;align-items:center;font-size:1.2rem;color:white;margin-bottom:5px;}
+        .category-name{font-size:0.7rem;color:#666;font-weight:500;}
+        .task-filters{display:flex;justify-content:center;padding:12px 0;border-bottom:1px solid #eee;background:white;flex-wrap:wrap;}
+        .filter{padding:6px 16px;margin:0 4px;border-radius:30px;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;background:#f0f4ff;color:#007AFF;font-weight:500;}
+        .filter.active{background:linear-gradient(to right,#007AFF,#34AADC);color:white;box-shadow:0 4px 10px rgba(0,122,255,0.2);}
+        .task-list{padding:15px;max-height:60vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+        .task-item{background:white;border-radius:18px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.05);transition:all 0.3s ease;user-select:none;border:1px solid rgba(0,0,0,0.03);display:block;white-space:normal;width:100%;vertical-align:top;box-sizing:border-box;}
+        .task-header{display:flex;align-items:center;margin-bottom:10px;cursor:pointer;}
+        .task-check{width:24px;height:24px;border-radius:8px;border:2px solid #007AFF;margin-right:12px;display:flex;justify-content:center;align-items:center;flex-shrink:0;transition:all 0.3s ease;cursor:pointer;}
+        .task-check i{color:white;font-size:14px;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
+        .task-content{flex-grow:1;}
+        .task-title{font-weight:600;margin-bottom:4px;transition:all 0.3s ease;padding-right:20px;font-size:1.05rem;color:#333;}
+        .task-meta{display:flex;align-items:center;font-size:0.8rem;color:#777;}
+        .task-category{display:flex;align-items:center;margin-right:12px;}
+        .task-category i{margin-right:4px;font-size:0.8rem;}
+        .task-time{display:flex;align-items:center;margin-right:12px;}
+        .task-time i{margin-right:4px;font-size:0.8rem;}
+        .subtask-count{display:flex;align-items:center;}
+        .subtask-count i{margin-right:4px;font-size:0.8rem;}
+        .subtask-progress{height:5px;background:#f0f4ff;border-radius:3px;margin-top:10px;overflow:hidden;}
+        .subtask-progress-fill{height:100%;background:#007AFF;border-radius:3px;width:0%;transition:width 0.5s ease;}
+        .expand-icon{position:absolute;right:16px;top:20px;transition:transform 0.3s ease;color:#888;}
+        .task-item.expanded .expand-icon{transform:rotate(180deg);color:#007AFF;}
+        .task-body{max-height:0;overflow:hidden;transition:max-height 0.4s ease;}
+        .task-item.expanded .task-body{max-height:1000px;}
+        .subtasks{margin-top:12px;padding-left:12px;border-left:2px solid #eee;}
+        .subtask{display:flex;align-items:center;padding:12px;background:#f8f9ff;border-radius:12px;position:relative;transition:all 0.3s ease;margin-bottom:8px;}
+        .subtask-content{display:flex;align-items:center;width:100%;}
+        .subtask-check{width:20px;height:20px;border-radius:6px;border:2px solid #ddd;margin-right:10px;display:flex;justify-content:center;align-items:center;flex-shrink:0;cursor:pointer;transition:all 0.3s ease;background:#f0f0f0;}
+        .subtask-check.completed{background:#007AFF;border-color:#007AFF;}
+        .subtask-check.completed i{opacity:1;transform:scale(1);color:white;}
+        .subtask-check i{font-size:12px;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
+        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:500;color:#666;margin-left:auto;padding:3px 8px;border-radius:8px;background:linear-gradient(to right,rgba(0,122,255,0.1),rgba(0,122,255,0.05));position:relative;overflow:hidden;}
+        .subtask-timer::before{content:'';position:absolute;top:0;left:0;height:100%;background:linear-gradient(to right,rgba(0,122,255,0.2),rgba(0,122,255,0.15));width:100%;z-index:0;}
+        .subtask-timer i{margin-right:4px;color:#007AFF;z-index:1;}
+        .subtask-timer span{z-index:1;}
+        .subtask-timer.urgent{color:#ff6b6b;background:linear-gradient(to right,rgba(255,107,107,0.1),rgba(255,107,107,0.05));}
+        .subtask-timer.urgent::before{background:linear-gradient(to right,rgba(255,107,107,0.2),rgba(255,107,107,0.15));}
+        .subtask-timer.urgent i{color:#ff6b6b;}
+        .subtask-timer.completed{color:#4CD964;background:linear-gradient(to right,rgba(76,217,100,0.1),rgba(76,217,100,0.05));}
+        .subtask-timer.completed::before{background:linear-gradient(to right,rgba(76,217,100,0.2),rgba(76,217,100,0.15));}
+        .subtask-timer.completed i{color:#4CD964;}
+        .subtask-timer.overtime-completed{color:#ff6b6b;background:linear-gradient(to right,rgba(255,107,107,0.1),rgba(255,107,107,0.05));}
+        .subtask-timer.overtime-completed::before{background:linear-gradient(to right,rgba(255,107,107,0.2),rgba(255,107,107,0.15));}
+        .subtask-timer.overtime-completed i{color:#ff6b6b;}
+        .subtask-title{flex-grow:1;font-size:0.9rem;color:#444;}
+        .subtask-actions{display:flex;gap:8px;margin-left:10px;}
+        .subtask-action{width:26px;height:26px;border-radius:8px;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.2s ease;background:#f0f4ff;color:#007AFF;}
+        .subtask-action.delete{background:#fff0f0;color:#FF3B30;}
+        .subtask-action:hover{transform:scale(1.1);}
+        .add-subtask{margin-top:10px;padding:10px;color:#007AFF;font-weight:500;display:flex;align-items:center;cursor:pointer;border-radius:10px;background:#f0f4ff;transition:all 0.3s ease;font-size:0.9rem;}
+        .add-subtask:hover{background:#e5ebff;}
+        .add-subtask i{margin-right:8px;}
+        .subtask-form{display:flex;margin-top:12px;align-items:center;}
+        .subtask-input{flex-grow:1;padding:12px 16px;border:1px solid #ddd;border-radius:12px;font-size:0.85rem;outline:none;transition:all 0.3s ease;background:#f8f9ff;}
+        .subtask-input:focus{border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,0.1);}
+        .subtask-duration{width:80px;padding:12px 8px;margin-left:8px;border:1px solid #ddd;border-radius:12px;font-size:0.85rem;outline:none;background:#f8f9ff;}
+        .subtask-duration:focus{border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,0.1);}
+        .add-subtask-btn{width:36px;height:36px;border-radius:10px;background:#007AFF;color:white;display:flex;justify-content:center;align-items:center;margin-left:10px;cursor:pointer;transition:all 0.3s ease;}
+        .add-subtask-btn:hover{background:#0062cc;transform:scale(1.1);}
+        .edit-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.95);display:flex;align-items:center;padding:0 20px;opacity:0;pointer-events:none;transition:all 0.3s ease;z-index:10;}
+        .edit-overlay.active{opacity:1;pointer-events:all;}
+        .edit-input{flex-grow:1;padding:12px 16px;border:2px solid #007AFF;border-radius:12px;font-size:1rem;outline:none;transition:all 0.3s ease;margin-right:10px;background:#f8f9ff;}
+        .edit-actions{display:flex;gap:8px;}
+        .edit-btn{width:40px;height:40px;border-radius:12px;background:#007AFF;color:white;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.3s ease;}
+        .edit-btn.delete{background:#FF3B30;}
+        .edit-btn:hover{transform:scale(1.1);}
+        .work .category-icon{background:#FF9500;}
+        .personal .category-icon{background:#4CD964;}
+        .shopping .category-icon{background:#FF2D55;}
+        .health .category-icon{background:#5AC8FA;}
+        .work .task-check{border-color:#FF9500;}
+        .work.completed .task-check{background:#FF9500;border-color:#FF9500;}
+        .work.completed .task-check i{opacity:1;}
+        .personal .task-check{border-color:#4CD964;}
+        .personal.completed .task-check{background:#4CD964;border-color:#4CD964;}
+        .personal.completed .task-check i{opacity:1;}
+        .shopping .task-check{border-color:#FF2D55;}
+        .shopping.completed .task-check{background:#FF2D55;border-color:#FF2D55;}
+        .shopping.completed .task-check i{opacity:1;}
+        .health .task-check{border-color:#5AC8FA;}
+        .health.completed .task-check{background:#5AC8FA;border-color:#5AC8FA;}
+        .health.completed .task-check i{opacity:1;}
+        .empty-state{text-align:center;padding:40px 20px;color:#777;}
+        .empty-state i{font-size:3.5rem;margin-bottom:20px;color:#e0e0e0;}
+        .empty-state h3{font-size:1.3rem;margin-bottom:10px;color:#555;}
+        .task-list::-webkit-scrollbar{width:6px;}
+        .task-list::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px;}
+        .task-list::-webkit-scrollbar-thumb{background:#c5c5c5;border-radius:10px;}
+        .task-list::-webkit-scrollbar-thumb:hover{background:#a8a8a8;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+        .fade-in{animation:fadeIn 0.5s ease forwards;}
+        .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;justify-content:center;align-items:center;overflow-y:auto;padding:20px;}
+        .modal-content{background:white;border-radius:20px;padding:10px;width:90vw;max-width:320px;min-width:200px;box-shadow:0 20px 40px rgba(0,0,0,0.2);position:relative;animation:modalIn 0.3s ease-out;max-height:90vh;overflow-y:auto;border:1px solid rgba(0,0,0,0.05);}
+        .edit-subtask-modal .modal-content{max-width:350px;}
+        .import-modal-content{background:white;border-radius:20px;padding:30px;width:90%;max-width:500px;box-shadow:0 20px 40px rgba(0,0,0,0.2);position:relative;animation:modalIn 0.3s ease-out;max-height:90vh;overflow-y:auto;border:1px solid rgba(0,0,0,0.05);}
+        @keyframes modalIn{from{opacity:0;transform:translateY(-30px);}to{opacity:1;transform:translateY(0);}}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+        .modal-header h2{color:#007AFF;font-size:1.5rem;}
+        .close-modal{background:none;border:none;font-size:1.5rem;color:#777;cursor:pointer;transition:all 0.3s ease;}
+        .close-modal:hover{color:#333;transform:rotate(90deg);}
+        .task-title-input{width:100%;padding:15px;border:2px solid #b0b0b0;border-radius:12px;font-size:1rem;margin-bottom:20px;transition:all 0.3s ease;background:#e0e0ff;color:#333;}
+        .time-setting input[type="number"]{width:100%;padding:12px 8px;border:2px solid #FFFFFF40;border-radius:12px;font-size:0.85rem;background:#FFFFFF40;margin-top:8px;outline:none;}
+        .task-title-input:focus{border-color:#007AFF;outline:none;box-shadow:0 0 0 3px rgba(0,122,255,0.1);}
+        .time-range{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+        .time-range input{flex:1;padding:12px 16px;border:1px solid #ddd;border-radius:12px;font-size:1rem;background:#f8f9ff;}
+        .time-range span{color:#666;}
+        .modal-actions{display:flex;justify-content:flex-start;gap:5px;flex-wrap:wrap;width:100%;}
+        .modal-btn{display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 8px;flex-shrink:1;min-width:0;white-space:normal;flex-basis:calc(50% - 5px);box-sizing:border-box;border-radius:14px;font-weight:500;cursor:pointer;transition:all 0.3s ease;border:none;font-weight:600;}
+        @media (max-width:280px){.modal-btn{flex-basis:100%;}}
+        @media (max-width:250px){.modal-btn{padding:12px 6px;font-size:0.9rem;}}
+        .cancel-btn{background:#f0f4ff;color:#007AFF;}
+        .cancel-btn:hover{background:#e5ebff;}
+        .add-btn{background:linear-gradient(to right,#007AFF,#34AADC);color:white;box-shadow:0 4px 10px rgba(0,122,255,0.2);}
+        .add-btn:hover{transform:translateY(-2px);box-shadow:0 6px 15px rgba(0,122,255,0.3);}
+        .reset-btn{background:linear-gradient(to right,#FF3B30,#FF9500);color:white;box-shadow:0 4px 10px rgba(255,59,48,0.2);}
+        .reset-btn:hover{transform:translateY(-2px);box-shadow:0 6px 15px rgba(255,59,48,0.3);}
+        .delete-btn{background:#FF3B30;color:white;}
+        .notification{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:white;padding:12px 24px;border-radius:30px;font-size:0.9rem;z-index:2000;opacity:0;transition:opacity 0.3s ease;pointer-events:none;backdrop-filter:blur(10px);}
+        .notification.show{opacity:1;}
+        .completed-task .task-title{text-decoration:line-through;color:#888;}
+        .event-icons{display:flex;justify-content:center;gap:15px;margin:15px 0 20px;}
+        .event-icon-option{width:50px;height:50px;border-radius:14px;display:flex;justify-content:center;align-items:center;font-size:1.4rem;color:white;cursor:pointer;transition:all 0.3s ease;position:relative;}
+        .event-icon-option.selected{transform:scale(1.1);box-shadow:0 0 0 3px #007AFF;}
+        .event-icon-option.personal{background:#FF2D55;}
+        .event-icon-option.work{background:#FF9500;}
+        .event-icon-option.holiday{background:#4CD964;}
+        .event-icon-option.other{background:#5AC8FA;}
+        .habit-icon-option{width:50px;height:50px;border-radius:14px;display:flex;justify-content:center;align-items:center;font-size:1.4rem;color:white;cursor:pointer;transition:all 0.3s ease;position:relative;}
+        .habit-icon-option.selected{transform:scale(1.1);box-shadow:0 0 0 3px #007AFF;}
+        .habit-icon-option.health{background:#FF2D55;}
+        .habit-icon-option.study{background:#FF9500;}
+        .habit-icon-option.exercise{background:#4CD964;}
+        .habit-icon-option.other{background:#5AC8FA;}
+        .notes-label{display:block;margin-bottom:8px;color:#555;font-weight:500;}
+        .notes-input{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:12px;font-size:0.95rem;margin-bottom:20px;transition:all 0.3s ease;resize:none;min-height:80px;background:#f8f9ff;}
+        .notes-input:focus{border-color:#007AFF;outline:none;box-shadow:0 0 0 3px rgba(0,122,255,0.1);}
+        .import-modal-content{background:white;border-radius:20px;padding:30px;width:90%;max-width:500px;box-shadow:0 20px 40px rgba(0,0,0,0.2);position:relative;animation:modalIn 0.3s ease-out;}
+        .import-instructions{background:#f0f4ff;border-radius:14px;padding:15px;margin-bottom:20px;font-size:0.9rem;border:1px solid rgba(0,122,255,0.1);}
+        .import-instructions h3{margin-bottom:10px;color:#007AFF;}
+        .file-input-container{position:relative;margin-bottom:20px;}
+        .file-input-label{display:block;padding:15px;border:2px dashed #007AFF;border-radius:14px;text-align:center;cursor:pointer;transition:all 0.3s ease;color:#007AFF;font-weight:500;background:#f0f4ff;}
+        .file-input-label:hover{background:#e5ebff;}
+        .file-input-label i{margin-right:8px;font-size:1.2rem;}
+        .file-input{position:absolute;width:100%;height:100%;top:0;left:0;opacity:0;cursor:pointer;}
+        .file-name{text-align:center;margin-top:10px;font-size:0.9rem;color:#666;}
+        .import-note{font-size:0.85rem;color:#777;text-align:center;margin-top:20px;}
+        #confirm-import-modal .modal-content{max-width:400px;}
+        .confirm-message{padding:20px;font-size:1rem;color:#555;text-align:center;line-height:1.6;}
+        .daily-checkin-container{background:linear-gradient(to right,#4a69bd,#6a89cc);border-radius:12px;padding:15px;margin:10px 10px;position:relative;box-shadow:0 6px 20px rgba(74,105,189,0.2);transition:all 0.3s ease;}
+        .checkin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;cursor:pointer;}
+        .checkin-title{font-size:1.1rem;color:white;font-weight:600;display:flex;align-items:center;}
+        .checkin-title i{margin-right:8px;font-size:1.2rem;}
+        .checkin-toggle-icon{color:white;font-size:1rem;transition:transform 0.3s ease;}
+        .checkin-body{transition:all 0.3s ease;}
+        .checkin-stats{display:flex;justify-content:space-around;padding:10px 0;margin-bottom:15px;}
+        .checkin-stat{text-align:center;padding:8px 12px;background:rgba(255,255,255,0.15);border-radius:12px;min-width:80px;}
+        .checkin-stat-value{font-size:1.4rem;font-weight:bold;line-height:1.2;color:white;}
+        .checkin-stat-label{font-size:0.75rem;opacity:0.9;color:rgba(255,255,255,0.9);}
+        .checkin-tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+        .checkin-item{background:rgba(255,255,255,0.15);border-radius:16px;padding:12px;position:relative;overflow:hidden;backdrop-filter:blur(5px);transition:all 0.3s ease;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.08);}
+        .checkin-item:hover{background:rgba(255,255,255,0.25);transform:translateY(-3px);}
+        .checkin-icon{width:40px;height:40px;border-radius:12px;display:flex;justify-content:center;align-items:center;font-size:1.2rem;color:white;margin-bottom:10px;}
+        .checkin-name{font-size:0.9rem;color:white;font-weight:600;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .checkin-days{font-size:0.85rem;color:rgba(255,255,255,0.9);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;}
+        .days-value{font-size:1.1rem;color:white;font-weight:700;}
+        .checkin-actions{position:absolute;top:8px;right:8px;display:flex;gap:5px;opacity:0;transition:opacity 0.3s ease;}
+        .checkin-item:hover .checkin-actions{opacity:1;}
+        .checkin-action{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.3);display:flex;justify-content:center;align-items:center;color:white;font-size:0.7rem;cursor:pointer;transition:all 0.2s ease;}
+        .checkin-action:hover{background:rgba(255,255,255,0.5);transform:scale(1.1);}
+        .add-checkin{display:flex;justify-content:center;align-items:center;width:100%;height:36px;background:rgba(255,255,255,0.2);border-radius:12px;color:white;font-size:0.9rem;cursor:pointer;transition:all 0.3s ease;margin-top:10px;font-weight:500;}
+        .add-checkin:hover{background:rgba(255,255,255,0.3);}
+        .add-checkin i{margin-right:8px;font-size:0.9rem;}
+        .collapsed .checkin-body{max-height:0;opacity:0;overflow:hidden;margin:0;padding:0;}
+        .collapsed .checkin-toggle-icon{transform:rotate(180deg);}
+        .checkin-btn{width:100%;padding:8px;border-radius:10px;background:rgba(255,255,255,0.2);border:none;color:white;font-weight:500;cursor:pointer;transition:all 0.3s ease;margin-top:8px;display:flex;justify-content:center;align-items:center;}
+        .checkin-btn:hover{background:rgba(255,255,255,0.3);}
+        .checkin-btn.checked{background:rgba(76,217,100,0.4);}
+        .checkin-btn.checked:hover{background:rgba(76,217,100,0.5);}
+        .checkin-item.health .checkin-icon{background:#FF6B6B;}
+        .checkin-item.study .checkin-icon{background:#48DBFB;}
+        .checkin-item.exercise .checkin-icon{background:#4CD964;}
+        .checkin-item.other .checkin-icon{background:#9C88FF;}
+        .checkin-icons{display:flex;justify-content:center;gap:15px;margin:15px 0 20px;}
+        .checkin-icon-option{width:50px;height:50px;border-radius:14px;display:flex;justify-content:center;align-items:center;font-size:1.4rem;color:white;cursor:pointer;transition:all 0.3s ease;position:relative;}
+        .checkin-icon-option.selected{transform:scale(1.1);box-shadow:0 0 0 3px #4a69bd;}
+        .checkin-icon-option.health{background:#FF6B6B;}
+        .checkin-icon-option.study{background:#48DBFB;}
+        .checkin-icon-option.exercise{background:#4CD964;}
+        .checkin-icon-option.other{background:#9C88FF;}
+        @media (max-width:480px){body{padding:10px;}.container{border-radius:20px;}header{padding:20px 15px;}h1{font-size:1.5rem;}.add-task-card{padding:15px;}.task-item{padding:15px;}.modal-content,.import-modal-content{padding:20px;max-height:85vh;}.category-option{width:50px;height:50px;}.category-icon{width:40px;height:40px;}.event-item{min-width:100px;padding:10px;}.event-name{font-size:0.8rem;}.event-countdown{font-size:0.75rem;}.events-body{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));}.modal-header h2{font-size:1.2rem;}.modal-btn{padding:10px 20px;}.subtask-timer{font-size:0.75rem;padding:2px 6px;}.subtask-duration{width:70px;padding:10px 6px;}.time-range{flex-direction:column;align-items:stretch;}.pomodoro-display{font-size:2rem;padding:12px 30px;}.pomodoro-btn{width:44px;height:44px;}.quick-time-btn{min-width:70px;height:34px;font-size:0.8rem;}.checkin-tasks{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 设置菜单 -->
+    <div class="settings-container">
+        <div class="settings-btn" id="settings-btn"><i class="fas fa-cog"></i></div>
+        <div class="settings-menu" id="settings-menu">
+            <div class="settings-item" id="export-data"><i class="fas fa-file-export"></i><span>导出数据</span></div>
+            <div class="settings-item" id="import-data"><i class="fas fa-file-import"></i><span>导入数据</span></div>
+            <div class="settings-item reset" id="reset-data"><i class="fas fa-trash-alt"></i><span>重置数据</span></div>
+        </div>
+    </div>
+    <!-- 事件倒计时区域 -->
+    <div class="events-container">
+        <div class="events-header"><div class="events-title"><i class="fas fa-calendar-alt"></i>重要事件倒计时</div><div class="toggle-icon"><i class="fas fa-chevron-down"></i></div></div>
+        <div class="events-body"></div>
+        <div class="add-event"><i class="fas fa-plus"></i>添加事件</div>
+    </div>
+    <!-- 每日打卡区域 -->
+    <div class="daily-checkin-container">
+        <div class="checkin-header"><div class="checkin-title"><i class="fas fa-calendar-check"></i>每日打卡</div><div class="checkin-toggle-icon"><i class="fas fa-chevron-down"></i></div></div>
+        <div class="checkin-body">
+            <div class="checkin-stats"><div class="checkin-stat"><div class="checkin-stat-value" id="total-habits">0</div><div class="checkin-stat-label">总任务</div></div><div class="checkin-stat"><div class="checkin-stat-value" id="completed-today">0</div><div class="checkin-stat-label">今日完成</div></div><div class="checkin-stat"><div class="checkin-stat-value" id="longest-streak">0</div><div class="checkin-stat-label">最长坚持</div></div></div>
+            <div class="checkin-tasks" id="checkin-tasks"></div>
+            <div class="add-checkin" id="add-checkin-btn"><i class="fas fa-plus"></i>添加打卡任务</div>
+        </div>
+    </div>
+    <!-- 番茄钟区域 -->
+    <div class="pomodoro-container">
+        <div class="pomodoro-header"><div class="pomodoro-title"><i class="fas fa-clock"></i>番茄工作法<span class="pomodoro-count" id="pomodoro-count" style="margin-left:10px;font-size:0.9em;color:#ddd;cursor:pointer;" title="三击清零">完成轮数：0</span></div></div>
+        <div class="pomodoro-display-container"><div class="pomodoro-display" id="pomodoro-display">25:00</div><div class="pomodoro-progress"><div class="pomodoro-progress-fill" id="pomodoro-progress"></div></div></div>
+        <div class="pomodoro-controls"><div class="pomodoro-btn" id="start-pomodoro"><i class="fas fa-play"></i></div><div class="pomodoro-btn" id="pause-pomodoro"><i class="fas fa-pause"></i></div><div class="pomodoro-btn" id="reset-pomodoro"><i class="fas fa-redo"></i></div><div class="quick-time-btn" data-minutes="5">5分钟</div><div class="quick-time-btn" data-minutes="10">10分钟</div></div>
+        <div class="pomodoro-settings"><div class="time-setting"><label>专注:</label><input type="number" id="work-duration" min="1" max="60" value="25"></div><div class="time-setting"><label>休息:</label><input type="number" id="break-duration" min="1" max="30" value="5"></div></div>
+    </div>
+    <header>
+        <h1>增强型任务管理系统</h1>
+        <p class="subtitle">高效管理任务与时间</p>
+        <div class="stats"><div class="stat-item"><div class="stat-value" id="total-tasks">0</div><div class="stat-label">总任务</div><div class="total-progress"><div class="progress-fill" id="total-progress"><div class="progress-percent" id="progress-percent">0%</div></div></div></div><div class="stat-item"><div class="stat-value" id="completed-tasks">0</div><div class="stat-label">已完成</div></div><div class="stat-item"><div class="stat-value" id="active-timers">0</div><div class="stat-label">进行中</div></div></div>
+    </header>
+    <div class="task-input-area">
+        <div class="add-task-card" id="add-task-card"><div class="card-header"><div class="add-icon"><i class="fas fa-plus"></i></div><h3>添加新任务</h3></div><p>选择任务类型开始创建</p><div class="category-container"><div class="category-option work" data-category="work"><div class="category-icon"><i class="fas fa-briefcase"></i></div><div class="category-name">工作</div></div><div class="category-option personal" data-category="personal"><div class="category-icon"><i class="fas fa-home"></i></div><div class="category-name">个人</div></div><div class="category-option shopping" data-category="shopping"><div class="category-icon"><i class="fas fa-shopping-cart"></i></div><div class="category-name">购物</div></div><div class="category-option health" data-category="health"><div class="category-icon"><i class="fas fa-heartbeat"></i></div><div class="category-name">健康</div></div></div></div>
+    </div>
+    <div class="task-filters"><div class="filter active" data-filter="all">全部</div><div class="filter" data-filter="pending">待完成</div><div class="filter" data-filter="completed">已完成</div><div class="filter" data-filter="timed">有时间限制</div></div>
+    <div class="task-list" id="task-list"><div class="empty-state"><i class="fas fa-clipboard-list"></i><h3>暂无任务</h3><p>点击"添加新任务"开始创建您的第一个任务</p></div></div>
+</div>
+
+<!-- 模态框 -->
+<div class="modal" id="add-task-modal"><div class="modal-content"><div class="modal-header"><h2 id="modal-title">添加新任务</h2><button class="close-modal">&times;</button></div><input type="text" class="task-title-input" id="task-title-input" placeholder="输入任务标题..."><div class="time-range"><input type="time" id="task-start-time"><span>至</span><input type="time" id="task-end-time"></div><div class="modal-actions"><button class="modal-btn cancel-btn">取消</button><button class="modal-btn add-btn">添加任务</button></div></div></div>
+<div class="modal edit-subtask-modal" id="edit-subtask-modal"><div class="modal-content"><div class="modal-header"><h2>编辑子任务</h2><button class="close-modal">&times;</button></div><input type="text" class="task-title-input" id="subtask-title-input" placeholder="输入子任务标题..."><div class="time-setting" style="margin:15px 0;"><label>倒计时(分钟):</label><input type="number" id="subtask-duration-input" min="1" max="600" value="" placeholder="输入倒计时分钟数"></div><div class="modal-actions"><button class="modal-btn delete-btn" id="delete-subtask-btn">删除</button><button class="modal-btn cancel-btn">取消</button><button class="modal-btn add-btn" id="save-subtask-btn">保存</button></div></div></div>
+<div class="modal" id="edit-event-modal"><div class="modal-content"><div class="modal-header"><h2>编辑事件</h2><button class="close-modal">&times;</button></div><input type="text" class="task-title-input" id="edit-event-name-input" placeholder="事件名称..."><input type="date" class="task-title-input" id="edit-event-date-input"><div class="event-icons"><div class="event-icon-option personal" data-type="personal"><i class="fas fa-user"></i></div><div class="event-icon-option work" data-type="work"><i class="fas fa-briefcase"></i></div><div class="event-icon-option holiday" data-type="holiday"><i class="fas fa-calendar-day"></i></div><div class="event-icon-option other" data-type="other"><i class="fas fa-ellipsis-h"></i></div></div><label class="notes-label">事件备注（可选）</label><textarea class="notes-input" id="edit-event-notes-input" placeholder="输入事件备注..."></textarea><div class="modal-actions"><button class="modal-btn delete-btn" id="delete-event-btn">删除</button><button class="modal-btn cancel-btn" id="edit-event-cancel">取消</button><button class="modal-btn add-btn" id="edit-event-save">保存</button></div></div></div>
+<div class="modal" id="add-event-modal"><div class="modal-content"><div class="modal-header"><h2>添加重要事件</h2><button class="close-modal">&times;</button></div><input type="text" class="task-title-input" id="event-name-input" placeholder="事件名称..."><input type="date" class="task-title-input" id="event-date-input"><div class="event-icons"><div class="event-icon-option personal selected" data-type="personal"><i class="fas fa-user"></i></div><div class="event-icon-option work" data-type="work"><i class="fas fa-briefcase"></i></div><div class="event-icon-option holiday" data-type="holiday"><i class="fas fa-calendar-day"></i></div><div class="event-icon-option other" data-type="other"><i class="fas fa-ellipsis-h"></i></div></div><label class="notes-label">事件备注（可选）</label><textarea class="notes-input" id="event-notes-input" placeholder="输入事件备注..."></textarea><div class="modal-actions"><button class="modal-btn cancel-btn">取消</button><button class="modal-btn add-btn" id="add-event-btn">添加</button></div></div></div>
+<div class="modal" id="import-modal"><div class="import-modal-content"><div class="modal-header"><h2>导入数据</h2><button class="close-modal">&times;</button></div><div class="import-instructions"><h3>导入说明</h3><p>请选择之前导出的JSON文件进行导入。</p></div><div class="file-input-container"><label class="file-input-label" for="file-input"><i class="fas fa-cloud-upload-alt"></i>选择文件</label><input type="file" id="file-input" class="file-input" accept=".json"><div class="file-name" id="file-name">未选择文件</div></div><div class="modal-actions"><button class="modal-btn cancel-btn" id="import-cancel">取消</button><button class="modal-btn add-btn" id="import-confirm">确认导入</button></div></div></div>
+<div class="modal" id="confirm-import-modal"><div class="modal-content"><div class="modal-header"><h2>确认导入</h2><button class="close-modal">&times;</button></div><div class="confirm-message"><p>导入数据将覆盖当前所有数据，确定要继续吗？</p></div><div class="modal-actions"><button class="modal-btn cancel-btn" id="confirm-import-cancel">取消</button><button class="modal-btn add-btn" id="confirm-import-confirm">确认导入</button></div></div></div>
+<div class="modal" id="reset-modal"><div class="modal-content"><div class="modal-header"><h2>确认重置数据</h2><button class="close-modal">&times;</button></div><div class="confirm-message"><p>您确定要重置所有数据吗？此操作将清除所有数据，且无法恢复。</p></div><div class="modal-actions"><button class="modal-btn cancel-btn" id="reset-cancel">取消</button><button class="modal-btn reset-btn" id="reset-confirm">确认重置</button></div></div></div>
+<div class="modal" id="checkin-modal"><div class="modal-content"><div class="modal-header"><h2>添加打卡任务</h2><button class="close-modal">&times;</button></div><input type="text" class="task-title-input" id="habit-name-input" placeholder="输入打卡任务名称..."><div class="checkin-icons"><div class="checkin-icon-option health selected" data-type="health"><i class="fas fa-heartbeat"></i></div><div class="checkin-icon-option study" data-type="study"><i class="fas fa-book"></i></div><div class="checkin-icon-option exercise" data-type="exercise"><i class="fas fa-running"></i></div><div class="checkin-icon-option other" data-type="other"><i class="fas fa-ellipsis-h"></i></div></div><div class="modal-actions"><button class="modal-btn cancel-btn" id="checkin-cancel">取消</button><button class="modal-btn add-btn" id="checkin-add">添加</button></div></div></div>
+<div class="modal" id="edit-checkin-modal"><div class="modal-content"><div class="modal-header"><h2>编辑打卡任务</h2><button class="close-modal">&times;</button></div><input type="text" class="task-title-input" id="edit-habit-name-input" placeholder="输入打卡任务名称..."><div class="checkin-icons"><div class="checkin-icon-option health" data-type="health"><i class="fas fa-heartbeat"></i></div><div class="checkin-icon-option study" data-type="study"><i class="fas fa-book"></i></div><div class="checkin-icon-option exercise" data-type="exercise"><i class="fas fa-running"></i></div><div class="checkin-icon-option other" data-type="other"><i class="fas fa-ellipsis-h"></i></div></div><div class="modal-actions"><button class="modal-btn delete-btn" id="delete-habit-btn">删除</button><button class="modal-btn cancel-btn" id="edit-cancel">取消</button><button class="modal-btn add-btn" id="save-habit-btn">保存</button></div></div></div>
+<div class="notification" id="notification">操作成功！</div>
+
+<script>
+    // 存储键
+    const TASKS_STORAGE_KEY = "tomato_task_list";
+    const EVENTS_STORAGE_KEY = "tomato_events";
+    const HABITS_STORAGE_KEY = "daily_habits";
+    const POMODORO_SETTINGS_KEY = "pomodoro_settings";
+
+    let tasks = [], events = [], habits = [];
+    let currentFilter = 'all';
+    let selectedSubtaskId = null, selectedEventId = null, selectedHabitId = null;
+    let selectedEventType = 'personal', selectedHabitType = 'health';
+    let timerInterval;
+
+    // 番茄钟
+    let pomodoroInterval, pomodoroState = 'idle', pomodoroTimeLeft = 25*60, pomodoroMode = 'work';
+    let pomodoroWorkDuration = 25, pomodoroBreakDuration = 5, pomodoroCount = 0;
+
+    // DOM 元素
+    const taskListDiv = document.getElementById('task-list');
+    const eventsBody = document.querySelector('.events-body');
+    const checkinTasksDiv = document.getElementById('checkin-tasks');
+    const totalTasksSpan = document.getElementById('total-tasks');
+    const completedTasksSpan = document.getElementById('completed-tasks');
+    const activeTimersSpan = document.getElementById('active-timers');
+    const totalProgressFill = document.getElementById('total-progress');
+    const progressPercentSpan = document.getElementById('progress-percent');
+    const totalHabitsSpan = document.getElementById('total-habits');
+    const completedTodaySpan = document.getElementById('completed-today');
+    const longestStreakSpan = document.getElementById('longest-streak');
+    const notificationDiv = document.getElementById('notification');
+
+    // 辅助函数
+    function showNotification(msg) {
+        notificationDiv.textContent = msg;
+        notificationDiv.classList.add('show');
+        setTimeout(() => notificationDiv.classList.remove('show'), 2000);
+    }
+    function getCurrentDate() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function escapeHtml(str) {
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // 数据持久化
+    function saveTasks() { localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks)); }
+    function saveEvents() { localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events)); }
+    function saveHabits() { localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(habits)); }
+    function savePomodoroSettings() {
+        localStorage.setItem(POMODORO_SETTINGS_KEY, JSON.stringify({
+            workDuration: pomodoroWorkDuration,
+            breakDuration: pomodoroBreakDuration,
+            count: pomodoroCount
+        }));
+    }
+    function loadPomodoroSettings() {
+        const saved = localStorage.getItem(POMODORO_SETTINGS_KEY);
+        if(saved) {
+            try {
+                const s = JSON.parse(saved);
+                if(typeof s.workDuration === 'number' && s.workDuration > 0) pomodoroWorkDuration = s.workDuration;
+                if(typeof s.breakDuration === 'number' && s.breakDuration > 0) pomodoroBreakDuration = s.breakDuration;
+                if(typeof s.count === 'number' && s.count >= 0) pomodoroCount = s.count;
+                document.getElementById('work-duration').value = pomodoroWorkDuration;
+                document.getElementById('break-duration').value = pomodoroBreakDuration;
+                const countEl = document.getElementById('pomodoro-count');
+                if(countEl) countEl.textContent = `完成轮数：${pomodoroCount}`;
+                pomodoroTimeLeft = pomodoroWorkDuration * 60;
+                updatePomodoroDisplay();
+            } catch(e) { console.warn('加载番茄钟设置失败:', e); }
+        }
+    }
+    function loadTasks() {
+        const stored = localStorage.getItem(TASKS_STORAGE_KEY);
+        try {
+            tasks = stored ? JSON.parse(stored) : [
+                { id:1, title:"完成项目报告", completed:false, category:"work", startTime:"09:00", endTime:"11:00", expanded:false,
+                  subtasks:[ { id:101, title:"收集数据", completed:true, duration:30, startTime:Date.now()-1200000 },
+                             { id:102, title:"撰写初稿", completed:false, duration:45, startTime:Date.now()-600000 },
+                             { id:103, title:"校对修改", completed:false } ] },
+                { id:2, title:"购买生活用品", completed:true, category:"shopping", startTime:"14:00", endTime:"15:30", expanded:false,
+                  subtasks:[ { id:201, title:"水果蔬菜", completed:true, duration:20 },
+                             { id:202, title:"牛奶面包", completed:true } ] }
+            ];
+        } catch(e) {
+            console.warn('加载任务失败:', e);
+            tasks = [];
+        }
+    }
+    function loadEvents() {
+        const stored = localStorage.getItem(EVENTS_STORAGE_KEY);
+        try {
+            events = stored ? JSON.parse(stored) : (function(){
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth()+1).padStart(2,'0');
+                const dd = String(now.getDate()).padStart(2,'0');
+                return [
+                    { id:1, name:"下个季度规划", date:`${yyyy}-${mm}-${dd}`, type:"work", notes:"制定 Q 计划" },
+                    { id:2, name:"生日", date:`${yyyy}-12-25`, type:"personal", notes:"和家人庆祝" },
+                    { id:3, name:"团队复盘", date:`${yyyy+1}-01-15`, type:"work", notes:"年度总结" }
+                ];
+            })();
+        } catch(e) {
+            console.warn('加载事件失败:', e);
+            events = [];
+        }
+    }
+    function loadHabits() {
+        const stored = localStorage.getItem(HABITS_STORAGE_KEY);
+        try {
+            habits = stored ? JSON.parse(stored) : [
+                { id:1, name:"晨跑锻炼", type:"exercise", days:12, streak:5, history:[], lastCheckin:getCurrentDate() },
+                { id:2, name:"阅读学习", type:"study", days:18, streak:7, history:[], lastCheckin:getCurrentDate() },
+                { id:3, name:"喝水2L", type:"health", days:25, streak:10, history:[], lastCheckin:getCurrentDate() }
+            ];
+        } catch(e) {
+            console.warn('加载打卡失败:', e);
+            habits = [];
+        }
+    }
+
+    // 渲染任务（子任务只保留编辑按钮，删除按钮隐藏）
+    function renderTasks() {
+        const filtered = tasks.filter(t => {
+            if(currentFilter === 'all') return true;
+            if(currentFilter === 'completed') return t.completed;
+            if(currentFilter === 'pending') return !t.completed;
+            if(currentFilter === 'timed') return t.subtasks.some(st=>st.duration) || (t.startTime && t.endTime);
+            return true;
+        });
+        if(filtered.length === 0) {
+            taskListDiv.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><h3>暂无任务</h3></div>';
+            return;
+        }
+        taskListDiv.innerHTML = filtered.map(task => {
+            const completedSubtasks = task.subtasks.filter(s=>s.completed).length;
+            const totalSubs = task.subtasks.length;
+            const categoryMap = { work:{icon:"fa-briefcase",name:"工作"}, personal:{icon:"fa-home",name:"个人"}, shopping:{icon:"fa-shopping-cart",name:"购物"}, health:{icon:"fa-heartbeat",name:"健康"} };
+            const cat = categoryMap[task.category] || {icon:"fa-tag",name:"其他"};
+            const timeDisplay = (task.startTime && task.endTime) ? `<div class="task-time"><i class="far fa-clock"></i><span>${task.startTime} - ${task.endTime}</span></div>` : '';
+            const subtaskStatus = totalSubs>0 ? `<div class="subtask-count"><i class="fas fa-tasks"></i><span>${completedSubtasks}/${totalSubs}</span></div>` : '';
+            const progressBar = totalSubs>0 ? `<div class="subtask-progress"><div class="subtask-progress-fill" style="width:${(completedSubtasks/totalSubs)*100}%"></div></div>` : '';
+            let subtasksHtml = '';
+            if(task.subtasks.length) {
+                subtasksHtml = '<div class="subtasks">';
+                task.subtasks.forEach(sub => {
+                    // 子任务只显示编辑按钮，不显示删除按钮
+                    subtasksHtml += `<div class="subtask" data-id="${sub.id}"><div class="subtask-content"><div class="subtask-check ${sub.completed?'completed':''}"><i class="fas fa-check"></i></div><div class="subtask-title">${escapeHtml(sub.title)}</div><div class="subtask-timer" data-subid="${sub.id}"></div></div><div class="subtask-actions"><div class="subtask-action edit" data-id="${sub.id}"><i class="fas fa-pencil-alt"></i></div></div></div>`;
+                });
+                subtasksHtml += '</div>';
+            }
+            const addSubtaskForm = `<div class="subtask-form"><input type="text" class="subtask-input" placeholder="添加子任务..." data-task-id="${task.id}"><input type="number" min="1" class="subtask-duration" placeholder="分钟" data-task-id="${task.id}"><div class="add-subtask-btn" data-task-id="${task.id}"><i class="fas fa-plus"></i></div></div>`;
+            const editOverlay = `<div class="edit-overlay"><input type="text" class="edit-input" value="${escapeHtml(task.title)}" data-task-id="${task.id}"><div class="edit-actions"><div class="edit-btn delete" data-task-id="${task.id}"><i class="fas fa-trash"></i></div><div class="edit-btn" data-task-id="${task.id}"><i class="fas fa-check"></i></div></div></div>`;
+            return `<div class="task-item fade-in ${task.category} ${task.completed?'completed completed-task':''} ${task.expanded?'expanded':''}" data-id="${task.id}">
+                <div class="task-header"><div class="task-check"><i class="fas fa-check"></i></div><div class="task-content"><div class="task-title">${escapeHtml(task.title)}</div><div class="task-meta"><div class="task-category"><i class="fas ${cat.icon}"></i><span>${cat.name}</span></div>${timeDisplay}${subtaskStatus}</div>${progressBar}</div><div class="expand-icon"><i class="fas fa-chevron-down"></i></div></div>
+                <div class="task-body">${subtasksHtml}<div class="add-subtask" data-task-id="${task.id}"><i class="fas fa-plus-circle"></i><span>添加子任务</span></div>${addSubtaskForm}</div>${editOverlay}
+            </div>`;
+        }).join('');
+        bindTaskEvents();
+        updateStats();
+        updateSubtaskTimers();
+    }
+
+    function bindTaskEvents() {
+        document.querySelectorAll('.task-item').forEach(el => {
+            const tid = parseInt(el.dataset.id);
+            const task = tasks.find(t=>t.id===tid);
+            if(!task) return;
+
+            el.querySelector('.task-check')?.addEventListener('click', (e) => { e.stopPropagation(); toggleTaskCompletion(tid); });
+            el.querySelector('.expand-icon')?.addEventListener('click', () => { task.expanded = !task.expanded; renderTasks(); saveTasks(); });
+            el.querySelectorAll('.subtask-check').forEach(ch => {
+                ch.addEventListener('click', (e) => { e.stopPropagation(); const sid = parseInt(ch.closest('.subtask').dataset.id); toggleSubtaskCompletion(tid, sid); });
+            });
+            el.querySelectorAll('.subtask-action.edit').forEach(btn => {
+                btn.addEventListener('click', (e) => { e.stopPropagation(); const sid = parseInt(btn.dataset.id); editSubtask(tid, sid); });
+            });
+            // 移除了删除按钮的事件绑定
+            el.querySelector('.add-subtask')?.addEventListener('click', () => {
+                const form = el.querySelector('.subtask-form');
+                if(form) form.style.display = 'flex';
+            });
+            const addBtn = el.querySelector('.add-subtask-btn');
+            if(addBtn) {
+                addBtn.addEventListener('click', () => {
+                    const input = el.querySelector('.subtask-input');
+                    const dur = el.querySelector('.subtask-duration');
+                    addSubtask(tid, input.value, dur.value);
+                    input.value = '';
+                    dur.value = '';
+                    const form = el.querySelector('.subtask-form');
+                    if(form) form.style.display = 'none';
+                });
+            }
+            const subInput = el.querySelector('.subtask-input');
+            if(subInput) {
+                subInput.addEventListener('keypress', (e) => {
+                    if(e.key === 'Enter') {
+                        e.preventDefault();
+                        const dur = el.querySelector('.subtask-duration');
+                        addSubtask(tid, subInput.value, dur.value);
+                        subInput.value = '';
+                        if(dur) dur.value = '';
+                        const form = el.querySelector('.subtask-form');
+                        if(form) form.style.display = 'none';
+                    }
+                });
+            }
+            let clickCount=0, clickTimeout;
+            const header = el.querySelector('.task-header');
+            header.addEventListener('click', (e) => {
+                if(e.target.closest('.task-check') || e.target.closest('.subtask-check')) return;
+                clickCount++;
+                if(clickCount===1) clickTimeout = setTimeout(()=>clickCount=0,500);
+                else if(clickCount===3) {
+                    clearTimeout(clickTimeout);
+                    const overlay = el.querySelector('.edit-overlay');
+                    if(overlay) {
+                        overlay.classList.add('active');
+                        overlay.querySelector('.edit-input')?.focus();
+                    }
+                    clickCount=0;
+                }
+            });
+            const editBtn = el.querySelector('.edit-btn:not(.delete)');
+            editBtn?.addEventListener('click', () => {
+                const newTitle = el.querySelector('.edit-input').value.trim();
+                if(newTitle) { task.title = newTitle; saveTasks(); renderTasks(); showNotification('任务已更新'); }
+                el.querySelector('.edit-overlay')?.classList.remove('active');
+            });
+            const delBtn = el.querySelector('.edit-btn.delete');
+            delBtn?.addEventListener('click', () => { deleteTask(tid); });
+        });
+    }
+
+    function updateSubtaskTimers() {
+        const subtaskElements = document.querySelectorAll('.subtask');
+        let activeCount = 0;
+        subtaskElements.forEach(el => {
+            const sid = parseInt(el.dataset.id);
+            let foundSub = null;
+            for(let t of tasks) {
+                let sub = t.subtasks.find(s=>s.id===sid);
+                if(sub) { foundSub = sub; break; }
+            }
+            if(!foundSub) return;
+            const sub = foundSub;
+            const timerDiv = el.querySelector('.subtask-timer');
+            if(!timerDiv) return;
+            if(sub.duration && sub.startTime && !sub.completed) {
+                const elapsed = (Date.now() - sub.startTime) / 1000;
+                const remaining = Math.max(0, sub.duration * 60 - elapsed);
+                if(remaining > 0) {
+                    const minutes = Math.floor(remaining / 60);
+                    const seconds = Math.floor(remaining % 60);
+                    const progress = remaining / (sub.duration * 60);
+                    let displayText = '';
+                    if(sub.duration >= 120) {
+                        const hours = Math.floor(minutes / 60);
+                        const mins = minutes % 60;
+                        displayText = `${hours}:${mins.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+                    } else {
+                        displayText = `${minutes}:${seconds.toString().padStart(2,'0')}`;
+                    }
+                    timerDiv.innerHTML = `<i class="fas fa-clock"></i><span>${displayText}</span>`;
+                    timerDiv.style.background = progress < 0.3 ? 'linear-gradient(to right, rgba(255,107,107,0.1), rgba(255,107,107,0.05))' : 'linear-gradient(to right, rgba(0,122,255,0.1), rgba(0,122,255,0.05))';
+                    timerDiv.className = progress < 0.3 ? 'subtask-timer urgent' : 'subtask-timer';
+                    activeCount++;
+                } else {
+                    timerDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>超时</span>`;
+                    timerDiv.className = 'subtask-timer urgent';
+                    sub.overtime = true;
+                }
+            } else if(sub.completed) {
+                if(sub.overtime) {
+                    timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>超时完成</span>`;
+                    timerDiv.className = 'subtask-timer overtime-completed';
+                } else if(sub.duration) {
+                    timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>已完成</span>`;
+                    timerDiv.className = 'subtask-timer completed';
+                } else {
+                    timerDiv.innerHTML = '';
+                }
+            } else {
+                timerDiv.innerHTML = '';
+            }
+        });
+        activeTimersSpan.textContent = activeCount;
+    }
+
+    function toggleTaskCompletion(id) { const t = tasks.find(t=>t.id===id); if(t) { t.completed = !t.completed; saveTasks(); renderTasks(); } }
+    function toggleSubtaskCompletion(taskId, subtaskId) {
+        const t = tasks.find(t=>t.id===taskId);
+        const sub = t?.subtasks.find(s=>s.id===subtaskId);
+        if(sub) { sub.completed = !sub.completed; if(sub.completed) delete sub.startTime; else if(sub.duration) sub.startTime = Date.now(); saveTasks(); renderTasks(); }
+    }
+    function addSubtask(taskId, title, duration) {
+        if(!title.trim()) { showNotification('请输入子任务内容'); return; }
+        const t = tasks.find(t=>t.id===taskId);
+        if(t) {
+            const newId = Date.now();
+            const sub = { id:newId, title:title.trim(), completed:false };
+            if(duration && parseInt(duration)>0) { sub.duration = parseInt(duration); sub.startTime = Date.now(); }
+            t.subtasks.push(sub);
+            saveTasks();
+            renderTasks();
+            showNotification('子任务添加成功');
+        }
+    }
+    function deleteSubtask(taskId, subtaskId) {
+        const t = tasks.find(t=>t.id===taskId);
+        if(t) { t.subtasks = t.subtasks.filter(s=>s.id!==subtaskId); saveTasks(); renderTasks(); showNotification('子任务已删除'); }
+    }
+    function editSubtask(taskId, subtaskId) {
+        const t = tasks.find(t=>t.id===taskId);
+        const sub = t?.subtasks.find(s=>s.id===subtaskId);
+        if(sub) {
+            selectedSubtaskId = subtaskId;
+            document.getElementById('subtask-title-input').value = sub.title;
+            document.getElementById('subtask-duration-input').value = sub.duration || '';
+            document.getElementById('edit-subtask-modal').style.display = 'flex';
+        }
+    }
+    function saveEditedSubtask() {
+        const newTitle = document.getElementById('subtask-title-input').value.trim();
+        const newDur = parseInt(document.getElementById('subtask-duration-input').value);
+        if(!newTitle) { showNotification('标题不能为空'); return; }
+        for(let t of tasks) {
+            let sub = t.subtasks.find(s=>s.id===selectedSubtaskId);
+            if(sub) {
+                sub.title = newTitle;
+                if(newDur) { sub.duration = newDur; if(!sub.completed) sub.startTime = Date.now(); }
+                else { delete sub.duration; delete sub.startTime; }
+                saveTasks(); renderTasks(); break;
+            }
+        }
+        closeModal();
+    }
+    function deleteEditedSubtask() {
+        for(let t of tasks) {
+            let idx = t.subtasks.findIndex(s=>s.id===selectedSubtaskId);
+            if(idx!==-1) { t.subtasks.splice(idx,1); saveTasks(); renderTasks(); break; }
+        }
+        closeModal();
+    }
+    function deleteTask(taskId) {
+        tasks = tasks.filter(t=>t.id!==taskId);
+        saveTasks();
+        renderTasks();
+        updateStats();
+    }
+
+    // 渲染事件：只显示编辑按钮，删除按钮移至编辑弹窗
+    function renderEvents() {
+        eventsBody.innerHTML = events.map(ev => {
+            const d = new Date(ev.date);
+            const now = new Date();
+            const diff = d - now;
+            const days = Math.floor(diff/86400000);
+            const hours = Math.floor((diff%86400000)/3600000);
+            const mins = Math.floor((diff%3600000)/60000);
+            const secs = Math.floor((diff%60000)/1000);
+            let iconClass = ev.type==='personal'?'fa-user':ev.type==='work'?'fa-briefcase':ev.type==='holiday'?'fa-calendar-day':'fa-ellipsis-h';
+            return `<div class="event-item ${ev.type}" data-id="${ev.id}">
+                <div class="event-icon"><i class="fas ${iconClass}"></i></div>
+                <div class="event-name">${escapeHtml(ev.name)}</div>
+                ${ev.notes?`<div class="event-notes">${escapeHtml(ev.notes)}</div>`:''}
+                <div class="event-countdown"><div><div class="countdown-value">${days}</div>天</div><div><div class="countdown-value">${hours}</div>时</div><div><div class="countdown-value">${mins}</div>分</div><div><div class="countdown-value">${secs}</div>秒</div></div>
+                <div class="event-actions"><div class="event-action edit-event"><i class="fas fa-pencil-alt"></i></div></div>
+            </div>`;
+        }).join('');
+        // 只绑定编辑按钮
+        document.querySelectorAll('.edit-event').forEach(btn => {
+            btn.addEventListener('click', (e) => { const id = parseInt(btn.closest('.event-item').dataset.id); showEditEventModal(id); });
+        });
+    }
+    function showEditEventModal(id) {
+        const ev = events.find(e=>e.id===id);
+        if(ev) {
+            selectedEventId = id;
+            document.getElementById('edit-event-name-input').value = ev.name;
+            document.getElementById('edit-event-date-input').value = ev.date;
+            document.getElementById('edit-event-notes-input').value = ev.notes || '';
+            document.querySelectorAll('#edit-event-modal .event-icon-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if(opt.dataset.type === ev.type) opt.classList.add('selected');
+            });
+            document.getElementById('edit-event-modal').style.display = 'flex';
+        }
+    }
+    function saveEditedEvent() {
+        const name = document.getElementById('edit-event-name-input').value.trim();
+        const date = document.getElementById('edit-event-date-input').value;
+        const notes = document.getElementById('edit-event-notes-input').value.trim();
+        const selectedIcon = document.querySelector('#edit-event-modal .event-icon-option.selected');
+        const type = selectedIcon ? selectedIcon.dataset.type : 'personal';
+        if(!name || !date) { showNotification('请填写完整'); return; }
+        const idx = events.findIndex(e=>e.id===selectedEventId);
+        if(idx!==-1) {
+            events[idx] = { ...events[idx], name, date, notes, type };
+            saveEvents();
+            renderEvents();
+            showNotification('事件已更新');
+            closeModal();
+        }
+    }
+    function deleteEvent() {
+        if(selectedEventId) {
+            events = events.filter(e=>e.id!==selectedEventId);
+            saveEvents();
+            renderEvents();
+            showNotification('事件已删除');
+            closeModal();
+        }
+    }
+    function addEvent() {
+        const name = document.getElementById('event-name-input').value.trim();
+        const date = document.getElementById('event-date-input').value;
+        const notes = document.getElementById('event-notes-input').value.trim();
+        const selectedIcon = document.querySelector('#add-event-modal .event-icon-option.selected');
+        const type = selectedIcon ? selectedIcon.dataset.type : 'personal';
+        if(!name || !date) { showNotification('请填写完整'); return; }
+        events.unshift({ id:Date.now(), name, date, type, notes });
+        saveEvents();
+        renderEvents();
+        closeModal();
+        showNotification('事件添加成功');
+    }
+
+    // 渲染打卡：只显示编辑按钮，删除按钮移至编辑弹窗
+    function renderHabits() {
+        const today = getCurrentDate();
+        checkinTasksDiv.innerHTML = habits.map(h => {
+            let iconClass = h.type==='health'?'fa-heartbeat':h.type==='study'?'fa-book':h.type==='exercise'?'fa-running':'fa-ellipsis-h';
+            const checked = h.history.includes(today);
+            return `<div class="checkin-item ${h.type}" data-id="${h.id}">
+                <div class="checkin-icon"><i class="fas ${iconClass}"></i></div>
+                <div class="checkin-name">${escapeHtml(h.name)}</div>
+                <div class="checkin-days"><span>连续:</span><span class="days-value">${h.streak}天</span></div>
+                <div class="checkin-days"><span>累计:</span><span class="days-value">${h.days}天</span></div>
+                <button class="checkin-btn ${checked?'checked':''}" data-id="${h.id}"><i class="fas fa-${checked?'check':'plus'}"></i> ${checked?'已完成':'打卡'}</button>
+                <div class="checkin-actions"><div class="checkin-action edit-habit"><i class="fas fa-pencil-alt"></i></div></div>
+            </div>`;
+        }).join('');
+        document.querySelectorAll('.checkin-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => { const id = parseInt(btn.dataset.id); checkinHabit(id); });
+        });
+        document.querySelectorAll('.edit-habit').forEach(btn => {
+            btn.addEventListener('click', (e) => { const id = parseInt(btn.closest('.checkin-item').dataset.id); showEditHabitModal(id); });
+        });
+        updateStats();
+    }
+    function checkinHabit(id) {
+        const h = habits.find(h=>h.id===id);
+        if(!h) return;
+        const today = getCurrentDate();
+        if(h.history.includes(today)) { showNotification('今日已打卡'); return; }
+        h.history.push(today);
+        h.days++;
+        const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+        const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+        if(h.history.includes(yStr)) h.streak++;
+        else h.streak = 1;
+        h.lastCheckin = today;
+        saveHabits();
+        renderHabits();
+        showNotification('打卡成功！');
+    }
+    function showEditHabitModal(id) {
+        const h = habits.find(h=>h.id===id);
+        if(h) {
+            selectedHabitId = id;
+            document.getElementById('edit-habit-name-input').value = h.name;
+            document.querySelectorAll('#edit-checkin-modal .checkin-icon-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if(opt.dataset.type === h.type) opt.classList.add('selected');
+            });
+            document.getElementById('edit-checkin-modal').style.display = 'flex';
+        }
+    }
+    function saveEditedHabit() {
+        const name = document.getElementById('edit-habit-name-input').value.trim();
+        const selectedIcon = document.querySelector('#edit-checkin-modal .checkin-icon-option.selected');
+        const type = selectedIcon ? selectedIcon.dataset.type : 'health';
+        if(!name) { showNotification('请输入名称'); return; }
+        const idx = habits.findIndex(h=>h.id===selectedHabitId);
+        if(idx!==-1) {
+            habits[idx].name = name;
+            habits[idx].type = type;
+            saveHabits();
+            renderHabits();
+            showNotification('打卡任务已更新');
+            closeModal();
+        }
+    }
+    function deleteEditedHabit() {
+        habits = habits.filter(h=>h.id!==selectedHabitId);
+        saveHabits();
+        renderHabits();
+        closeModal();
+        showNotification('已删除');
+    }
+    function addHabit() {
+        const name = document.getElementById('habit-name-input').value.trim();
+        const selectedIcon = document.querySelector('#checkin-modal .checkin-icon-option.selected');
+        const type = selectedIcon ? selectedIcon.dataset.type : 'health';
+        if(!name) { showNotification('请输入名称'); return; }
+        habits.unshift({ id:Date.now(), name, type, days:0, streak:0, history:[], lastCheckin:null });
+        saveHabits();
+        renderHabits();
+        closeModal();
+        showNotification('打卡任务添加成功');
+    }
+
+    function updateStats() {
+        totalTasksSpan.textContent = tasks.length;
+        const completedCount = tasks.filter(t=>t.completed).length;
+        completedTasksSpan.textContent = completedCount;
+        let active = 0;
+        tasks.forEach(t => t.subtasks.forEach(s => { if(s.duration && !s.completed && s.startTime && (Date.now()-s.startTime)<s.duration*60) active++; }));
+        activeTimersSpan.textContent = active;
+        const totalP = tasks.length ? (completedCount/tasks.length)*100 : 0;
+        totalProgressFill.style.width = `${totalP}%`;
+        progressPercentSpan.textContent = `${Math.round(totalP)}%`;
+        totalHabitsSpan.textContent = habits.length;
+        const today = getCurrentDate();
+        completedTodaySpan.textContent = habits.filter(h=>h.history.includes(today)).length;
+        longestStreakSpan.textContent = habits.length ? Math.max(...habits.map(h=>h.streak)) : 0;
+    }
+
+    // 番茄钟
+    function updatePomodoroDisplay() {
+        const mins = Math.floor(pomodoroTimeLeft/60);
+        const secs = pomodoroTimeLeft%60;
+        document.getElementById('pomodoro-display').textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        const total = pomodoroMode==='work' ? pomodoroWorkDuration*60 : pomodoroBreakDuration*60;
+        const percent = (pomodoroTimeLeft/total)*100;
+        document.getElementById('pomodoro-progress').style.width = `${Math.max(0,percent)}%`;
+    }
+    function startPomodoro() {
+        if(pomodoroState === 'running') return;
+        pomodoroState = 'running';
+        if(pomodoroInterval) clearInterval(pomodoroInterval);
+        pomodoroInterval = setInterval(() => {
+            if(pomodoroTimeLeft <= 1) {
+                clearInterval(pomodoroInterval);
+                pomodoroState = 'idle';
+                if(pomodoroMode === 'work') {
+                    pomodoroCount++;
+                    document.getElementById('pomodoro-count').textContent = `完成轮数：${pomodoroCount}`;
+                    savePomodoroSettings();
+                    pomodoroMode = 'break';
+                    pomodoroTimeLeft = pomodoroBreakDuration * 60;
+                    showNotification('工作时间结束，开始休息！');
+                } else {
+                    pomodoroMode = 'work';
+                    pomodoroTimeLeft = pomodoroWorkDuration * 60;
+                    showNotification('休息时间结束，开始工作！');
+                }
+                updatePomodoroDisplay();
+            } else {
+                pomodoroTimeLeft--;
+                updatePomodoroDisplay();
+            }
+        }, 1000);
+    }
+    function pausePomodoro() { if(pomodoroState==='running') { clearInterval(pomodoroInterval); pomodoroState='paused'; showNotification('已暂停'); } }
+    function resetPomodoro() { clearInterval(pomodoroInterval); pomodoroState='idle'; pomodoroMode='work'; pomodoroTimeLeft = pomodoroWorkDuration*60; updatePomodoroDisplay(); showNotification('已重置'); }
+
+    function startTimerUpdates() {
+        setInterval(() => {
+            updateSubtaskTimers();
+            updateEventsDynamic();
+        }, 1000);
+    }
+    function updateEventsDynamic() {
+        const eventItems = document.querySelectorAll('.event-item');
+        eventItems.forEach(item => {
+            const id = parseInt(item.dataset.id);
+            const ev = events.find(e=>e.id===id);
+            if(ev) {
+                const d = new Date(ev.date);
+                const now = new Date();
+                const diff = d - now;
+                const days = Math.floor(diff/86400000);
+                const hours = Math.floor((diff%86400000)/3600000);
+                const mins = Math.floor((diff%3600000)/60000);
+                const secs = Math.floor((diff%60000)/1000);
+                const vals = item.querySelectorAll('.countdown-value');
+                if(vals.length===4) {
+                    vals[0].textContent = days;
+                    vals[1].textContent = hours;
+                    vals[2].textContent = mins;
+                    vals[3].textContent = secs;
+                }
+            }
+        });
+    }
+
+    // 导入导出重置
+    function exportData() {
+        const data = { tasks, events, habits, pomodoroSettings:{ workDuration:pomodoroWorkDuration, breakDuration:pomodoroBreakDuration, count:pomodoroCount } };
+        const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `task_backup_${new Date().toISOString().slice(0,19)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+    function importData(file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if(data.tasks) tasks = data.tasks;
+                if(data.events) events = data.events;
+                if(data.habits) habits = data.habits;
+                if(data.pomodoroSettings && typeof data.pomodoroSettings === 'object') {
+                    const ps = data.pomodoroSettings;
+                    if(typeof ps.workDuration === 'number' && ps.workDuration > 0 && ps.workDuration <= 180) pomodoroWorkDuration = ps.workDuration;
+                    if(typeof ps.breakDuration === 'number' && ps.breakDuration > 0 && ps.breakDuration <= 60) pomodoroBreakDuration = ps.breakDuration;
+                    if(typeof ps.count === 'number' && ps.count >= 0) pomodoroCount = Math.floor(ps.count);
+                    document.getElementById('work-duration').value = pomodoroWorkDuration;
+                    document.getElementById('break-duration').value = pomodoroBreakDuration;
+                    document.getElementById('pomodoro-count').textContent = `完成轮数：${pomodoroCount}`;
+                    if(pomodoroMode==='work') pomodoroTimeLeft = pomodoroWorkDuration*60;
+                    else pomodoroTimeLeft = pomodoroBreakDuration*60;
+                    updatePomodoroDisplay();
+                    savePomodoroSettings();
+                }
+                saveTasks(); saveEvents(); saveHabits();
+                renderTasks(); renderEvents(); renderHabits();
+                showNotification('导入成功');
+            } catch(err) { showNotification('文件格式错误'); }
+        };
+        reader.readAsText(file);
+    }
+    function resetAllData() {
+        if(confirm('确认重置所有数据？不可恢复！')) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    function closeModal() {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
+
+    let currentCategory = 'work';
+    function showAddTaskModal() {
+        document.getElementById('modal-title').textContent = `添加${currentCategory==='work'?'工作':currentCategory==='personal'?'个人':currentCategory==='shopping'?'购物':'健康'}任务`;
+        document.getElementById('task-title-input').value = '';
+        const now = new Date();
+        const start = new Date(now.getTime()+30*60000);
+        const end = new Date(start.getTime()+60*60000);
+        document.getElementById('task-start-time').value = `${start.getHours().toString().padStart(2,'0')}:${start.getMinutes().toString().padStart(2,'0')}`;
+        document.getElementById('task-end-time').value = `${end.getHours().toString().padStart(2,'0')}:${end.getMinutes().toString().padStart(2,'0')}`;
+        document.getElementById('add-task-modal').style.display = 'flex';
+    }
+    function addTaskFromModal() {
+        const title = document.getElementById('task-title-input').value.trim();
+        if(!title) { showNotification('请输入标题'); return; }
+        const start = document.getElementById('task-start-time').value;
+        const end = document.getElementById('task-end-time').value;
+        tasks.unshift({ id:Date.now(), title, completed:false, category:currentCategory, startTime:start, endTime:end, expanded:false, subtasks:[] });
+        saveTasks();
+        renderTasks();
+        closeModal();
+    }
+
+    function initEventListeners() {
+        document.querySelectorAll('.filter').forEach(f => {
+            f.addEventListener('click', () => {
+                document.querySelectorAll('.filter').forEach(f2=>f2.classList.remove('active'));
+                f.classList.add('active');
+                currentFilter = f.dataset.filter;
+                renderTasks();
+            });
+        });
+        document.querySelectorAll('.category-option').forEach(opt => {
+            opt.addEventListener('click', () => { currentCategory = opt.dataset.category; showAddTaskModal(); });
+        });
+        document.getElementById('add-task-card').addEventListener('click', () => { currentCategory = 'work'; showAddTaskModal(); });
+        document.querySelector('#add-task-modal .add-btn').addEventListener('click', addTaskFromModal);
+        document.querySelector('.add-event').addEventListener('click', () => document.getElementById('add-event-modal').style.display = 'flex');
+        document.getElementById('add-event-btn').addEventListener('click', addEvent);
+        document.querySelector('.events-header').addEventListener('click', () => document.querySelector('.events-container').classList.toggle('collapsed'));
+        document.getElementById('add-checkin-btn').addEventListener('click', () => document.getElementById('checkin-modal').style.display = 'flex');
+        document.getElementById('checkin-add').addEventListener('click', addHabit);
+        document.querySelector('.checkin-header').addEventListener('click', () => document.querySelector('.daily-checkin-container').classList.toggle('collapsed'));
+        document.getElementById('checkin-cancel').addEventListener('click', closeModal);
+        document.getElementById('save-subtask-btn').addEventListener('click', saveEditedSubtask);
+        document.getElementById('delete-subtask-btn').addEventListener('click', deleteEditedSubtask);
+        document.getElementById('save-habit-btn').addEventListener('click', saveEditedHabit);
+        document.getElementById('delete-habit-btn').addEventListener('click', deleteEditedHabit);
+        document.getElementById('edit-cancel').addEventListener('click', closeModal);
+        document.getElementById('edit-event-save').addEventListener('click', saveEditedEvent);
+        document.getElementById('edit-event-cancel').addEventListener('click', closeModal);
+        document.getElementById('delete-event-btn').addEventListener('click', deleteEvent);
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsMenu = document.getElementById('settings-menu');
+        settingsBtn.addEventListener('click', () => settingsMenu.classList.toggle('show'));
+        document.addEventListener('click', (e) => { if(!settingsBtn.contains(e.target) && !settingsMenu.contains(e.target)) settingsMenu.classList.remove('show'); });
+        document.getElementById('export-data').addEventListener('click', exportData);
+        document.getElementById('import-data').addEventListener('click', () => document.getElementById('import-modal').style.display = 'flex');
+        document.getElementById('import-confirm').addEventListener('click', () => {
+            const file = document.getElementById('file-input').files[0];
+            if(file) importData(file);
+            closeModal();
+        });
+        document.getElementById('reset-data').addEventListener('click', () => resetAllData());
+        document.getElementById('start-pomodoro').addEventListener('click', startPomodoro);
+        document.getElementById('pause-pomodoro').addEventListener('click', pausePomodoro);
+        document.getElementById('reset-pomodoro').addEventListener('click', resetPomodoro);
+        document.getElementById('work-duration').addEventListener('change', () => {
+            pomodoroWorkDuration = parseInt(document.getElementById('work-duration').value) || 25;
+            if(pomodoroMode==='work' && pomodoroState==='idle') pomodoroTimeLeft = pomodoroWorkDuration*60;
+            updatePomodoroDisplay();
+            savePomodoroSettings();
+        });
+        document.getElementById('break-duration').addEventListener('change', () => {
+            pomodoroBreakDuration = parseInt(document.getElementById('break-duration').value) || 5;
+            if(pomodoroMode==='break' && pomodoroState==='idle') pomodoroTimeLeft = pomodoroBreakDuration*60;
+            updatePomodoroDisplay();
+            savePomodoroSettings();
+        });
+        document.querySelectorAll('.quick-time-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                let mins = parseInt(btn.dataset.minutes);
+                if(!mins || mins < 1) return;
+                if(pomodoroInterval) { clearInterval(pomodoroInterval); pomodoroInterval = null; }
+                pomodoroState = 'idle';
+                pomodoroMode = 'work';
+                pomodoroTimeLeft = mins * 60;
+                pomodoroWorkDuration = mins;
+                document.getElementById('work-duration').value = mins;
+                updatePomodoroDisplay();
+                savePomodoroSettings();
+                showNotification(`已设置 ${mins} 分钟快捷时间，点开始启动`);
+            });
+        });
+        const countEl = document.getElementById('pomodoro-count');
+        let clickCount=0, clickTimeout;
+        countEl.addEventListener('click', () => {
+            clickCount++;
+            if(clickCount===1) clickTimeout = setTimeout(()=>clickCount=0,500);
+            else if(clickCount===3) {
+                clearTimeout(clickTimeout);
+                pomodoroCount = 0;
+                countEl.textContent = '完成轮数：0';
+                savePomodoroSettings();
+                showNotification('轮数已清零');
+                clickCount=0;
+            }
+        });
+        document.querySelectorAll('.close-modal, .cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
+    }
+
+    function init() {
+        loadTasks();
+        loadEvents();
+        loadHabits();
+        loadPomodoroSettings();
+        renderTasks();
+        renderEvents();
+        renderHabits();
+        initEventListeners();
+        startTimerUpdates();
+    }
+    init();
+</script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function(err) {
+            console.warn('SW 注册失败:', err);
+        });
+    }
+</script>
+</body>
+</html>
