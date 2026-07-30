@@ -133,25 +133,19 @@
         .subtask-check.completed{background:#007AFF;border-color:#007AFF;}
         .subtask-check.completed i{opacity:1;transform:scale(1);color:white;}
         .subtask-check i{font-size:12px;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
-        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:500;color:#666;margin-left:auto;padding:3px 8px;border-radius:8px;background:linear-gradient(to right,rgba(0,122,255,0.1),rgba(0,122,255,0.05));position:relative;overflow:hidden;flex-shrink:0;}
-        .subtask-timer::before{content:'';position:absolute;top:0;left:0;height:100%;background:linear-gradient(to right,rgba(0,122,255,0.2),rgba(0,122,255,0.15));width:100%;z-index:0;}
+        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:500;color:#666;margin-left:auto;padding:3px 10px;border-radius:8px;background:#f0f4ff;position:relative;overflow:hidden;flex-shrink:0;min-width:90px;--progress:100%;}
+        .subtask-timer::before{content:'';position:absolute;top:0;left:0;height:100%;background:linear-gradient(to right,rgba(0,122,255,0.3),rgba(0,122,255,0.25));width:var(--progress);z-index:0;transition:width 1s linear;}
         .subtask-timer i{margin-right:4px;color:#007AFF;z-index:1;}
         .subtask-timer span{z-index:1;}
         .subtask-timer.urgent{color:#ff6b6b;background:linear-gradient(to right,rgba(255,107,107,0.1),rgba(255,107,107,0.05));}
-        .subtask-timer.urgent::before{background:linear-gradient(to right,rgba(255,107,107,0.2),rgba(255,107,107,0.15));}
+        .subtask-timer.urgent::before{background:linear-gradient(to right,rgba(255,107,107,0.3),rgba(255,107,107,0.25));}
         .subtask-timer.urgent i{color:#ff6b6b;}
         .subtask-timer.completed{color:#4CD964;background:linear-gradient(to right,rgba(76,217,100,0.1),rgba(76,217,100,0.05));}
-        .subtask-timer.completed::before{background:linear-gradient(to right,rgba(76,217,100,0.2),rgba(76,217,100,0.15));}
+        .subtask-timer.completed::before{background:rgba(76,217,100,0.3);width:100%;}
         .subtask-timer.completed i{color:#4CD964;}
         .subtask-timer.overtime-completed{color:#ff6b6b;background:linear-gradient(to right,rgba(255,107,107,0.1),rgba(255,107,107,0.05));}
-        .subtask-timer.overtime-completed::before{background:linear-gradient(to right,rgba(255,107,107,0.2),rgba(255,107,107,0.15));}
+        .subtask-timer.overtime-completed::before{background:rgba(255,107,107,0.3);width:100%;}
         .subtask-timer.overtime-completed i{color:#ff6b6b;}
-        /* 倒计时全宽进度条 */
-        .subtask-countdown-bar{width:100%;height:10px;background:#f0f4ff;border-radius:5px;overflow:hidden;margin-top:8px;}
-        .subtask-countdown-fill{height:100%;border-radius:5px;transition:width 1s linear;background:#007AFF;}
-        .subtask-countdown-fill.urgent{background:#ff6b6b;}
-        .subtask-countdown-fill.completed{background:#4CD964;}
-        .subtask-countdown-fill.overtime{background:#ff6b6b;}
         .subtask-title{flex-grow:1;font-size:0.9rem;color:#444;}
         .subtask-actions{display:flex;gap:8px;margin-left:10px;}
         .subtask-action{width:26px;height:26px;border-radius:8px;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.2s ease;background:#f0f4ff;color:#007AFF;}
@@ -565,7 +559,7 @@
                 subtasksHtml = '<div class="subtasks">';
                 task.subtasks.forEach(sub => {
                     // 子任务只显示编辑按钮，不显示删除按钮
-                    subtasksHtml += `<div class="subtask" data-id="${sub.id}"><div class="subtask-content"><div class="subtask-check ${sub.completed?'completed':''}"><i class="fas fa-check"></i></div><div class="subtask-title">${escapeHtml(sub.title)}</div><div class="subtask-timer" data-subid="${sub.id}"></div></div><div class="subtask-countdown-bar" data-subid="${sub.id}"><div class="subtask-countdown-fill"></div></div><div class="subtask-actions"><div class="subtask-action edit" data-id="${sub.id}"><i class="fas fa-pencil-alt"></i></div></div></div>`;
+                    subtasksHtml += `<div class="subtask" data-id="${sub.id}"><div class="subtask-content"><div class="subtask-check ${sub.completed?'completed':''}"><i class="fas fa-check"></i></div><div class="subtask-title">${escapeHtml(sub.title)}</div><div class="subtask-timer" data-subid="${sub.id}"></div></div><div class="subtask-actions"><div class="subtask-action edit" data-id="${sub.id}"><i class="fas fa-pencil-alt"></i></div></div></div>`;
                 });
                 subtasksHtml += '</div>';
             }
@@ -666,8 +660,6 @@
             if(!foundSub) return;
             const sub = foundSub;
             const timerDiv = el.querySelector('.subtask-timer');
-            const countdownBar = el.querySelector('.subtask-countdown-bar');
-            const countdownFill = el.querySelector('.subtask-countdown-fill');
             if(!timerDiv) return;
             if(sub.duration && sub.startTime && !sub.completed) {
                 const elapsed = (Date.now() - sub.startTime) / 1000;
@@ -685,36 +677,34 @@
                         displayText = `${minutes}:${seconds.toString().padStart(2,'0')}`;
                     }
                     timerDiv.innerHTML = `<i class="fas fa-clock"></i><span>${displayText}</span>`;
-                    timerDiv.style.background = progress < 0.3 ? 'linear-gradient(to right, rgba(255,107,107,0.1), rgba(255,107,107,0.05))' : 'linear-gradient(to right, rgba(0,122,255,0.1), rgba(0,122,255,0.05))';
                     timerDiv.className = progress < 0.3 ? 'subtask-timer urgent' : 'subtask-timer';
-                    // 更新全宽进度条
-                    if(countdownFill) {
-                        countdownFill.style.width = (progress * 100) + '%';
-                        countdownFill.className = 'subtask-countdown-fill' + (progress < 0.3 ? ' urgent' : '');
-                    }
+                    // 用底纹宽度表示剩余时间百分比
+                    timerDiv.style.setProperty('--progress', (progress * 100) + '%');
+                    const before = timerDiv.querySelector('::before');
+                    timerDiv.style.background = '#f0f4ff';
                     activeCount++;
                 } else {
                     timerDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>超时</span>`;
                     timerDiv.className = 'subtask-timer urgent';
-                    if(countdownFill) { countdownFill.style.width = '100%'; countdownFill.className = 'subtask-countdown-fill overtime'; }
+                    timerDiv.style.setProperty('--progress', '100%');
                     sub.overtime = true;
                 }
             } else if(sub.completed) {
                 if(sub.overtime) {
                     timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>超时完成</span>`;
                     timerDiv.className = 'subtask-timer overtime-completed';
-                    if(countdownFill) { countdownFill.style.width = '100%'; countdownFill.className = 'subtask-countdown-fill overtime'; }
+                    timerDiv.style.setProperty('--progress', '100%');
                 } else if(sub.duration) {
                     timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>已完成</span>`;
                     timerDiv.className = 'subtask-timer completed';
-                    if(countdownFill) { countdownFill.style.width = '100%'; countdownFill.className = 'subtask-countdown-fill completed'; }
+                    timerDiv.style.setProperty('--progress', '100%');
                 } else {
                     timerDiv.innerHTML = '';
-                    if(countdownBar) countdownBar.style.display = 'none';
+                    timerDiv.style.setProperty('--progress', '0%');
                 }
             } else {
                 timerDiv.innerHTML = '';
-                if(countdownBar) countdownBar.style.display = 'none';
+                timerDiv.style.setProperty('--progress', '0%');
             }
         });
         activeTimersSpan.textContent = activeCount;
