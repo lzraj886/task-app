@@ -133,13 +133,15 @@
         .subtask-check.completed{background:#007AFF;border-color:#007AFF;}
         .subtask-check.completed i{opacity:1;transform:scale(1);color:white;}
         .subtask-check i{font-size:12px;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
-        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:600;color:#fff;margin-left:auto;padding:4px 10px;border-radius:8px;background:#e8edf5;position:relative;overflow:hidden;flex-shrink:0;min-width:90px;--progress:0%;}
+        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:600;color:#fff;margin-left:auto;padding:4px 10px;border-radius:8px;background:#e8edf5;position:relative;overflow:hidden;flex-shrink:0;min-width:100px;--progress:0%;}
         .subtask-timer::before{content:'';position:absolute;top:0;left:0;height:100%;width:var(--progress);z-index:0;transition:width 1s linear;background:linear-gradient(to right,#ff4d4d,#ff6b6b);box-shadow:inset 0 -2px 0 rgba(0,0,0,0.15);}
-        .subtask-timer i{margin-right:4px;color:#fff;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,0.3);}
-        .subtask-timer span{z-index:1;text-shadow:0 1px 2px rgba(0,0,0,0.3);}
+        .subtask-timer::after{content:'';position:absolute;top:0;right:0;height:100%;width:calc(100% - var(--progress));z-index:0;background:repeating-linear-gradient(45deg,#d0d5dd,#d0d5dd 4px,#c0c5d0 4px,#c0c5d0 8px);}
+        .subtask-timer i{margin-right:4px;color:#fff;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,0.4);}
+        .subtask-timer span{z-index:1;text-shadow:0 1px 2px rgba(0,0,0,0.4);}
         .subtask-timer.urgent::before{background:linear-gradient(to right,#cc0000,#ff1a1a);}
-        .subtask-timer.completed{color:#fff;}
+        .subtask-timer.completed::after{display:none;}
         .subtask-timer.completed::before{background:linear-gradient(to right,#4CD964,#5fdb6b);width:100%;}
+        .subtask-timer.overtime-completed::after{display:none;}
         .subtask-timer.overtime-completed::before{background:linear-gradient(to right,#cc0000,#ff1a1a);width:100%;}
         .subtask-title{flex-grow:1;font-size:0.9rem;color:#444;}
         .subtask-actions{display:flex;gap:8px;margin-left:10px;}
@@ -673,32 +675,35 @@
                     }
                     timerDiv.innerHTML = `<i class="fas fa-clock"></i><span>${displayText}</span>`;
                     timerDiv.className = progress < 0.3 ? 'subtask-timer urgent' : 'subtask-timer';
-                    // 用底纹宽度表示剩余时间百分比
+                    timerDiv.style.display = '';
                     timerDiv.style.setProperty('--progress', (progress * 100) + '%');
-                    timerDiv.style.background = '';
                     activeCount++;
                 } else {
                     timerDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>超时</span>`;
                     timerDiv.className = 'subtask-timer urgent';
+                    timerDiv.style.display = '';
                     timerDiv.style.setProperty('--progress', '100%');
                     sub.overtime = true;
                 }
             } else if(sub.completed) {
                 if(sub.overtime) {
-                    timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>超时完成</span>`;
+                    const otMin = sub.overtimeMinutes || 1;
+                    timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>超时${otMin}分钟完成</span>`;
                     timerDiv.className = 'subtask-timer overtime-completed';
+                    timerDiv.style.display = '';
                     timerDiv.style.setProperty('--progress', '100%');
                 } else if(sub.duration) {
                     timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>已完成</span>`;
                     timerDiv.className = 'subtask-timer completed';
+                    timerDiv.style.display = '';
                     timerDiv.style.setProperty('--progress', '100%');
                 } else {
                     timerDiv.innerHTML = '';
-                    timerDiv.style.setProperty('--progress', '0%');
+                    timerDiv.style.display = 'none';
                 }
             } else {
                 timerDiv.innerHTML = '';
-                timerDiv.style.setProperty('--progress', '0%');
+                timerDiv.style.display = 'none';
             }
         });
         activeTimersSpan.textContent = activeCount;
@@ -708,7 +713,38 @@
     function toggleSubtaskCompletion(taskId, subtaskId) {
         const t = tasks.find(t=>t.id===taskId);
         const sub = t?.subtasks.find(s=>s.id===subtaskId);
-        if(sub) { sub.completed = !sub.completed; if(sub.completed) delete sub.startTime; else if(sub.duration) sub.startTime = Date.now(); saveTasks(); renderTasks(); }
+        if(sub) {
+            sub.completed = !sub.completed;
+            if(sub.completed) {
+                // 完成时：记录是否超时、超时多少分钟
+                if(sub.duration && sub.startTime) {
+                    const elapsed = (Date.now() - sub.startTime) / 1000;
+                    const overtimeSec = elapsed - sub.duration * 60;
+                    if(overtimeSec > 0) {
+                        sub.overtime = true;
+                        sub.overtimeMinutes = Math.max(1, Math.round(overtimeSec / 60));
+                    } else {
+                        sub.overtime = false;
+                        sub.overtimeMinutes = 0;
+                    }
+                }
+                // 保留 startTime，不删除，方便取消打勾时恢复
+            } else {
+                // 取消打勾：恢复倒计时，从上次剩余时间继续
+                if(sub.duration && sub.startTime) {
+                    const elapsed = (Date.now() - sub.startTime) / 1000;
+                    const remaining = sub.duration * 60 - elapsed;
+                    if(remaining <= 0) {
+                        // 已经超时了，重新开始一轮倒计时
+                        sub.startTime = Date.now();
+                        sub.overtime = false;
+                        sub.overtimeMinutes = 0;
+                    }
+                    // 否则保留原 startTime，倒计时继续
+                }
+            }
+            saveTasks(); renderTasks();
+        }
     }
     function addSubtask(taskId, title, duration) {
         if(!title.trim()) { showNotification('请输入子任务内容'); return; }
