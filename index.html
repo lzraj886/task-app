@@ -89,9 +89,9 @@
         .stat-item{text-align:center;padding:0 10px;}
         .stat-value{font-size:1.5rem;font-weight:bold;line-height:1.2;color:white;}
         .stat-label{font-size:0.75rem;opacity:0.9;color:rgba(255,255,255,0.9);}
-        .total-progress{width:calc(100% - 16px);margin:8px auto 0;height:16px;background:rgba(255,255,255,0.3);border-radius:8px;overflow:hidden;position:relative;}
-        .progress-fill{height:100%;background:linear-gradient(to right,#FF2D55,#FF9500);border-radius:4px;width:65%;transition:width 0.5s ease;position:relative;}
-        .progress-percent{position:absolute;top:50%;left:8px;transform:translateY(-50%);font-size:0.75rem;font-weight:700;color:white;white-space:nowrap;text-shadow:0 0 4px rgba(0,0,0,0.5);}
+        .total-progress{width:100%;margin:10px 0 0;height:24px;background:rgba(255,255,255,0.3);border-radius:12px;overflow:hidden;position:relative;}
+        .progress-fill{height:100%;background:linear-gradient(to right,#FF2D55,#FF9500);border-radius:12px;width:0%;transition:width 0.5s ease;position:relative;}
+        .progress-percent{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:0.85rem;font-weight:700;color:white;white-space:nowrap;text-shadow:0 0 4px rgba(0,0,0,0.5);}
         .task-input-area{padding:15px 20px 20px;position:relative;}
         .add-task-card{background:white;border-radius:18px;padding:18px;box-shadow:0 4px 15px rgba(0,0,0,0.05);cursor:pointer;transition:all 0.3s ease;border:1px solid rgba(0,0,0,0.05);}
         .add-task-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.08);}
@@ -120,8 +120,8 @@
         .task-time i{margin-right:4px;font-size:0.8rem;}
         .subtask-count{display:flex;align-items:center;}
         .subtask-count i{margin-right:4px;font-size:0.8rem;}
-        .subtask-progress{height:5px;background:#f0f4ff;border-radius:3px;margin-top:10px;overflow:hidden;}
-        .subtask-progress-fill{height:100%;background:#007AFF;border-radius:3px;width:0%;transition:width 0.5s ease;}
+        .subtask-progress{height:8px;background:#f0f4ff;border-radius:4px;margin-top:10px;overflow:hidden;}
+        .subtask-progress-fill{height:100%;background:#007AFF;border-radius:4px;width:0%;transition:width 0.5s ease;}
         .expand-icon{position:absolute;right:16px;top:20px;transition:transform 0.3s ease;color:#888;}
         .task-item.expanded .expand-icon{transform:rotate(180deg);color:#007AFF;}
         .task-body{max-height:0;overflow:hidden;transition:max-height 0.4s ease;}
@@ -133,7 +133,7 @@
         .subtask-check.completed{background:#007AFF;border-color:#007AFF;}
         .subtask-check.completed i{opacity:1;transform:scale(1);color:white;}
         .subtask-check i{font-size:12px;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
-        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:500;color:#666;margin-left:auto;padding:3px 8px;border-radius:8px;background:linear-gradient(to right,rgba(0,122,255,0.1),rgba(0,122,255,0.05));position:relative;overflow:hidden;}
+        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:500;color:#666;margin-left:auto;padding:3px 8px;border-radius:8px;background:linear-gradient(to right,rgba(0,122,255,0.1),rgba(0,122,255,0.05));position:relative;overflow:hidden;flex-shrink:0;}
         .subtask-timer::before{content:'';position:absolute;top:0;left:0;height:100%;background:linear-gradient(to right,rgba(0,122,255,0.2),rgba(0,122,255,0.15));width:100%;z-index:0;}
         .subtask-timer i{margin-right:4px;color:#007AFF;z-index:1;}
         .subtask-timer span{z-index:1;}
@@ -146,6 +146,12 @@
         .subtask-timer.overtime-completed{color:#ff6b6b;background:linear-gradient(to right,rgba(255,107,107,0.1),rgba(255,107,107,0.05));}
         .subtask-timer.overtime-completed::before{background:linear-gradient(to right,rgba(255,107,107,0.2),rgba(255,107,107,0.15));}
         .subtask-timer.overtime-completed i{color:#ff6b6b;}
+        /* 倒计时全宽进度条 */
+        .subtask-countdown-bar{width:100%;height:10px;background:#f0f4ff;border-radius:5px;overflow:hidden;margin-top:8px;}
+        .subtask-countdown-fill{height:100%;border-radius:5px;transition:width 1s linear;background:#007AFF;}
+        .subtask-countdown-fill.urgent{background:#ff6b6b;}
+        .subtask-countdown-fill.completed{background:#4CD964;}
+        .subtask-countdown-fill.overtime{background:#ff6b6b;}
         .subtask-title{flex-grow:1;font-size:0.9rem;color:#444;}
         .subtask-actions{display:flex;gap:8px;margin-left:10px;}
         .subtask-action{width:26px;height:26px;border-radius:8px;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.2s ease;background:#f0f4ff;color:#007AFF;}
@@ -329,7 +335,7 @@
     <header>
         <h1>增强型任务管理系统</h1>
         <p class="subtitle">高效管理任务与时间</p>
-        <div class="stats"><div class="stat-item"><div class="stat-value" id="total-tasks">0</div><div class="stat-label">总任务</div><div class="total-progress"><div class="progress-fill" id="total-progress"><div class="progress-percent" id="progress-percent">0%</div></div></div></div><div class="stat-item"><div class="stat-value" id="completed-tasks">0</div><div class="stat-label">已完成</div></div><div class="stat-item"><div class="stat-value" id="active-timers">0</div><div class="stat-label">进行中</div></div></div>
+        <div class="stats"><div class="stat-item"><div class="stat-value" id="total-tasks">0</div><div class="stat-label">总任务</div></div><div class="stat-item"><div class="stat-value" id="completed-tasks">0</div><div class="stat-label">已完成</div></div><div class="stat-item"><div class="stat-value" id="active-timers">0</div><div class="stat-label">进行中</div></div></div><div class="total-progress"><div class="progress-fill" id="total-progress"><div class="progress-percent" id="progress-percent">0%</div></div></div>
     </header>
     <div class="task-input-area">
         <div class="add-task-card" id="add-task-card"><div class="card-header"><div class="add-icon"><i class="fas fa-plus"></i></div><h3>添加新任务</h3></div><p>选择任务类型开始创建</p><div class="category-container"><div class="category-option work" data-category="work"><div class="category-icon"><i class="fas fa-briefcase"></i></div><div class="category-name">工作</div></div><div class="category-option personal" data-category="personal"><div class="category-icon"><i class="fas fa-home"></i></div><div class="category-name">个人</div></div><div class="category-option shopping" data-category="shopping"><div class="category-icon"><i class="fas fa-shopping-cart"></i></div><div class="category-name">购物</div></div><div class="category-option health" data-category="health"><div class="category-icon"><i class="fas fa-heartbeat"></i></div><div class="category-name">健康</div></div></div></div>
@@ -559,7 +565,7 @@
                 subtasksHtml = '<div class="subtasks">';
                 task.subtasks.forEach(sub => {
                     // 子任务只显示编辑按钮，不显示删除按钮
-                    subtasksHtml += `<div class="subtask" data-id="${sub.id}"><div class="subtask-content"><div class="subtask-check ${sub.completed?'completed':''}"><i class="fas fa-check"></i></div><div class="subtask-title">${escapeHtml(sub.title)}</div><div class="subtask-timer" data-subid="${sub.id}"></div></div><div class="subtask-actions"><div class="subtask-action edit" data-id="${sub.id}"><i class="fas fa-pencil-alt"></i></div></div></div>`;
+                    subtasksHtml += `<div class="subtask" data-id="${sub.id}"><div class="subtask-content"><div class="subtask-check ${sub.completed?'completed':''}"><i class="fas fa-check"></i></div><div class="subtask-title">${escapeHtml(sub.title)}</div><div class="subtask-timer" data-subid="${sub.id}"></div></div><div class="subtask-countdown-bar" data-subid="${sub.id}"><div class="subtask-countdown-fill"></div></div><div class="subtask-actions"><div class="subtask-action edit" data-id="${sub.id}"><i class="fas fa-pencil-alt"></i></div></div></div>`;
                 });
                 subtasksHtml += '</div>';
             }
@@ -660,6 +666,8 @@
             if(!foundSub) return;
             const sub = foundSub;
             const timerDiv = el.querySelector('.subtask-timer');
+            const countdownBar = el.querySelector('.subtask-countdown-bar');
+            const countdownFill = el.querySelector('.subtask-countdown-fill');
             if(!timerDiv) return;
             if(sub.duration && sub.startTime && !sub.completed) {
                 const elapsed = (Date.now() - sub.startTime) / 1000;
@@ -679,24 +687,34 @@
                     timerDiv.innerHTML = `<i class="fas fa-clock"></i><span>${displayText}</span>`;
                     timerDiv.style.background = progress < 0.3 ? 'linear-gradient(to right, rgba(255,107,107,0.1), rgba(255,107,107,0.05))' : 'linear-gradient(to right, rgba(0,122,255,0.1), rgba(0,122,255,0.05))';
                     timerDiv.className = progress < 0.3 ? 'subtask-timer urgent' : 'subtask-timer';
+                    // 更新全宽进度条
+                    if(countdownFill) {
+                        countdownFill.style.width = (progress * 100) + '%';
+                        countdownFill.className = 'subtask-countdown-fill' + (progress < 0.3 ? ' urgent' : '');
+                    }
                     activeCount++;
                 } else {
                     timerDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>超时</span>`;
                     timerDiv.className = 'subtask-timer urgent';
+                    if(countdownFill) { countdownFill.style.width = '100%'; countdownFill.className = 'subtask-countdown-fill overtime'; }
                     sub.overtime = true;
                 }
             } else if(sub.completed) {
                 if(sub.overtime) {
                     timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>超时完成</span>`;
                     timerDiv.className = 'subtask-timer overtime-completed';
+                    if(countdownFill) { countdownFill.style.width = '100%'; countdownFill.className = 'subtask-countdown-fill overtime'; }
                 } else if(sub.duration) {
                     timerDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>已完成</span>`;
                     timerDiv.className = 'subtask-timer completed';
+                    if(countdownFill) { countdownFill.style.width = '100%'; countdownFill.className = 'subtask-countdown-fill completed'; }
                 } else {
                     timerDiv.innerHTML = '';
+                    if(countdownBar) countdownBar.style.display = 'none';
                 }
             } else {
                 timerDiv.innerHTML = '';
+                if(countdownBar) countdownBar.style.display = 'none';
             }
         });
         activeTimersSpan.textContent = activeCount;
