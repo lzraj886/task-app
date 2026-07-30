@@ -1168,6 +1168,37 @@
             }
         });
         document.querySelectorAll('.close-modal, .cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
+
+        // 添加事件模态 - 图标选择
+        document.querySelectorAll('#add-event-modal .event-icon-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('#add-event-modal .event-icon-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                selectedEventType = opt.dataset.type;
+            });
+        });
+        // 编辑事件模态 - 图标选择
+        document.querySelectorAll('#edit-event-modal .event-icon-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('#edit-event-modal .event-icon-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+            });
+        });
+        // 添加打卡模态 - 图标选择
+        document.querySelectorAll('#checkin-modal .checkin-icon-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('#checkin-modal .checkin-icon-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                selectedHabitType = opt.dataset.type;
+            });
+        });
+        // 编辑打卡模态 - 图标选择
+        document.querySelectorAll('#edit-checkin-modal .checkin-icon-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('#edit-checkin-modal .checkin-icon-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+            });
+        });
     }
 
     async function init() {
