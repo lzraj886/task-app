@@ -133,22 +133,14 @@
         .subtask-check.completed{background:#007AFF;border-color:#007AFF;}
         .subtask-check.completed i{opacity:1;transform:scale(1);color:white;}
         .subtask-check i{font-size:12px;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
-        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:500;color:#666;margin-left:auto;padding:3px 10px;border-radius:8px;background:#f0f4ff;position:relative;overflow:hidden;flex-shrink:0;min-width:90px;--progress:100%;}
-        .subtask-timer::before{content:'';position:absolute;top:0;left:0;height:100%;background:linear-gradient(to right,#ff4d4d,#ff6b6b);width:var(--progress);z-index:0;transition:width 1s linear;box-shadow:inset 0 -2px 0 rgba(0,0,0,0.15);}
-        .subtask-timer i{margin-right:4px;color:#007AFF;z-index:1;}
-        .subtask-timer span{z-index:1;}
-        /* 倒计时中：红底白字 */
-        .subtask-timer:not(.completed):not(.overtime-completed):not([style*="--progress: 0%"]) i,
-        .subtask-timer:not(.completed):not(.overtime-completed) i{color:#fff;}
-        .subtask-timer:not(.completed):not(.overtime-completed) span,
-        .subtask-timer:not(.completed):not(.overtime-completed){color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.3);}
+        .subtask-timer{display:flex;align-items:center;font-size:0.85rem;font-weight:600;color:#fff;margin-left:auto;padding:4px 10px;border-radius:8px;background:#e8edf5;position:relative;overflow:hidden;flex-shrink:0;min-width:90px;--progress:0%;}
+        .subtask-timer::before{content:'';position:absolute;top:0;left:0;height:100%;width:var(--progress);z-index:0;transition:width 1s linear;background:linear-gradient(to right,#ff4d4d,#ff6b6b);box-shadow:inset 0 -2px 0 rgba(0,0,0,0.15);}
+        .subtask-timer i{margin-right:4px;color:#fff;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,0.3);}
+        .subtask-timer span{z-index:1;text-shadow:0 1px 2px rgba(0,0,0,0.3);}
         .subtask-timer.urgent::before{background:linear-gradient(to right,#cc0000,#ff1a1a);}
-        .subtask-timer.completed{color:#4CD964;background:linear-gradient(to right,rgba(76,217,100,0.1),rgba(76,217,100,0.05));text-shadow:none;}
+        .subtask-timer.completed{color:#fff;}
         .subtask-timer.completed::before{background:linear-gradient(to right,#4CD964,#5fdb6b);width:100%;}
-        .subtask-timer.completed i{color:#4CD964;}
-        .subtask-timer.overtime-completed{color:#ff6b6b;background:linear-gradient(to right,rgba(255,107,107,0.1),rgba(255,107,107,0.05));text-shadow:none;}
         .subtask-timer.overtime-completed::before{background:linear-gradient(to right,#cc0000,#ff1a1a);width:100%;}
-        .subtask-timer.overtime-completed i{color:#ff6b6b;}
         .subtask-title{flex-grow:1;font-size:0.9rem;color:#444;}
         .subtask-actions{display:flex;gap:8px;margin-left:10px;}
         .subtask-action{width:26px;height:26px;border-radius:8px;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:all 0.2s ease;background:#f0f4ff;color:#007AFF;}
@@ -683,8 +675,7 @@
                     timerDiv.className = progress < 0.3 ? 'subtask-timer urgent' : 'subtask-timer';
                     // 用底纹宽度表示剩余时间百分比
                     timerDiv.style.setProperty('--progress', (progress * 100) + '%');
-                    const before = timerDiv.querySelector('::before');
-                    timerDiv.style.background = '#f0f4ff';
+                    timerDiv.style.background = '';
                     activeCount++;
                 } else {
                     timerDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>超时</span>`;
